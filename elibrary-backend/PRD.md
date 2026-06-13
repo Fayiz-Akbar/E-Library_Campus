@@ -255,38 +255,20 @@ Status: `x` = belum dikerjakan, `o` = sudah selesai. AI tolong update tanda ini 
 
 ---
 
-## 7. Docker & Hosting
+## 7. Database & Hosting Plan
 
-### Docker (Opsi B — Database Only)
+### Database Setup (Supabase PostgreSQL)
 
-Project ini menggunakan Docker **hanya untuk menjalankan PostgreSQL secara lokal**, supaya environment database konsisten di laptop semua anggota tim. Backend (Express) tetap dijalankan secara normal via `npm run dev`, TIDAK di-dockerize.
+Project ini menggunakan **Supabase (PostgreSQL Cloud Free Tier)** baik untuk tahap *development* (lokal) maupun *production*. Kita tidak wajib menggunakan Docker secara lokal untuk menghindari kendala *environment/error* WSL di beberapa perangkat tim.
 
-Contoh `docker-compose.yml` di root folder backend:
+**Cara Konfigurasi Database ke Supabase:**
+1. Buat project baru di Supabase dengan Region: **Singapore (ap-southeast-1)**.
+2. Masuk ke **Project Settings > Database > Connection String**.
+3. Pilih tab **URI**, lalu salin string koneksinya.
+4. Format URI akan terlihat seperti ini:
+   ```text
+   postgresql://postgres.[username]:[password]@[aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres](https://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres)
 
-```yaml
-version: '3.8'
-services:
-  postgres:
-    image: postgres:16
-    container_name: elibrary_db
-    restart: always
-    environment:
-      POSTGRES_USER: elibrary_user
-      POSTGRES_PASSWORD: elibrary_pass
-      POSTGRES_DB: elibrary_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - elibrary_pgdata:/var/lib/postgresql/data
-
-volumes:
-  elibrary_pgdata:
-```
-
-**Cara pakai:**
-- Jalankan `docker compose up -d` untuk start database
-- Koneksi backend ke database via `.env` mengarah ke `localhost:5432` dengan kredensial di atas
-- `docker compose down` untuk stop (data tetap tersimpan di volume)
 
 ### Hosting Plan
 
