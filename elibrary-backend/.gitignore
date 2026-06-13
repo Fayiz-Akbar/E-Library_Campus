@@ -1,3 +1,46 @@
-node_modules/
+# =========================
+# Environment / Secrets
+# =========================
 .env
-npm-debug.log
+.env.local
+.env.*.local
+
+# =========================
+# Dependencies
+# =========================
+node_modules/
+
+# =========================
+# Logs
+# =========================
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+logs/
+
+# =========================
+# Build Output
+# =========================
+dist/
+build/
+
+# =========================
+# Docker (data lokal)
+# =========================
+# Jangan ikut commit volume data postgres lokal kalau disimpan sebagai folder (bind mount)
+pgdata/
+postgres-data/
+
+# =========================
+# OS / Editor
+# =========================
+.DS_Store
+.idea/
+.vscode/
+*.iml
+
+# =========================
+# Testing / Coverage
+# =========================
+coverage/

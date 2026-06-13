@@ -11,7 +11,7 @@ Aplikasi mobile e-library kampus berbasis React Native untuk peminjaman dan peng
 **Tech Stack:**
 - Frontend: React Native (CLI/Expo), JavaScript/TypeScript, `react-navigation`, Redux Toolkit/Zustand, `axios`, `react-native-vision-camera`, `react-native-qrcode-svg`, `AsyncStorage`
 - Backend: Node.js + Express.js, JWT Auth
-- Database: MySQL/PostgreSQL
+- Database: PostgreSQL
 - Tools: Postman, Git/GitHub
 
 ---
@@ -99,7 +99,8 @@ elibrary-mobile/
 │   └── App.js
 ├── .env
 ├── package.json
-└── README.md
+├── README.md
+└── PRD.md
 ```
 
 ### Backend (Express)
@@ -133,7 +134,8 @@ elibrary-backend/
 │   └── app.js
 ├── .env
 ├── package.json
-└── server.js
+├── server.js
+└── PRD.md
 ```
 
 **Catatan penempatan file berdasarkan domain:**
@@ -255,7 +257,53 @@ Status: `x` = belum dikerjakan, `o` = sudah selesai. AI tolong update tanda ini 
 
 ---
 
-## 7. Catatan Tambahan
+## 7. Docker & Hosting
+
+### Docker (Opsi B — Database Only)
+
+Project ini menggunakan Docker **hanya untuk menjalankan PostgreSQL secara lokal**, supaya environment database konsisten di laptop semua anggota tim. Backend (Express) tetap dijalankan secara normal via `npm run dev`, TIDAK di-dockerize.
+
+Contoh `docker-compose.yml` di root folder backend:
+
+```yaml
+version: '3.8'
+services:
+  postgres:
+    image: postgres:16
+    container_name: elibrary_db
+    restart: always
+    environment:
+      POSTGRES_USER: elibrary_user
+      POSTGRES_PASSWORD: elibrary_pass
+      POSTGRES_DB: elibrary_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - elibrary_pgdata:/var/lib/postgresql/data
+
+volumes:
+  elibrary_pgdata:
+```
+
+**Cara pakai:**
+- Jalankan `docker compose up -d` untuk start database
+- Koneksi backend ke database via `.env` mengarah ke `localhost:5432` dengan kredensial di atas
+- `docker compose down` untuk stop (data tetap tersimpan di volume)
+
+### Hosting Plan
+
+- **Database (PostgreSQL)**: Supabase (free tier, tanpa kartu kredit, tidak ada batas waktu expired)
+- **Backend (Express API)**: Render (free tier, 750 jam/bulan, tanpa kartu kredit)
+- **Mobile App**: tidak perlu hosting — cukup build APK (Android) untuk demo, atau jalankan via Expo Go
+
+**Catatan:**
+- Backend di Render free tier akan "sleep" setelah 15 menit tidak ada request, dan butuh ~30-50 detik untuk bangun kembali (cold start) saat ada request pertama setelah idle. Pertimbangkan ini saat demo ke dosen — bisa akses dulu API beberapa menit sebelum presentasi agar server sudah "hangat".
+- Connection string Supabase digunakan sebagai `DATABASE_URL` di environment variable Render (production) dan di `.env` lokal (development, mengarah ke Docker container).
+- Pastikan struktur tabel & migration sama antara database lokal (Docker) dan Supabase (production) — gunakan migration script/file SQL yang sama untuk keduanya.
+
+---
+
+## 8. Catatan Tambahan
 
 - Sepakati struktur API response sebelum coding agar frontend bisa pakai mock data lebih dulu.
 - Gunakan branch Git per domain (`feature/auth`, `feature/katalog`, `feature/transaksi`), merge rutin ke `develop`.
