@@ -46,3 +46,4 @@ postgres-data/
 coverage/
 
 docker-compose.override.yml
+docker-compose.yml
