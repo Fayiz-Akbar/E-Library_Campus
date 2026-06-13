@@ -45,4 +45,4 @@ postgres-data/
 # =========================
 coverage/
 
-docker-compose.yml
+docker-compose.override.yml
