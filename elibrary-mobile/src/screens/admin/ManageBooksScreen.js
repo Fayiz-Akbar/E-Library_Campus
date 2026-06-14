@@ -6,24 +6,27 @@ import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../constants/colors';
 import { fetchAllBooks } from '../../api/bookApi';
 import { adminCreateBook, adminUpdateBook, adminDeleteBook } from '../../api/bookApi';
+import axiosInstance from '../../api/axiosInstance'; // 🚀 REVISI UTAMA: Ikut jalur resmi axios yang sudah terbukti berhasil
 
 const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';
 
 export default function ManageBooksScreen() {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [categories, setCategories] = useState([]); 
   
   // State Form Modal CRUD
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBookId, setSelectedBookId] = useState(null); 
   const [imageSourceType, setImageSourceType] = useState('url'); 
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   
-  // 🚀 STATE BARU: Khusus untuk Mengontrol Modal Pop-up Tampilan QR Code Buku
+  // State Modal QR Code
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [activeQrData, setActiveQrData] = useState({ title: '', qr_code: '' });
 
   const [form, setForm] = useState({
-    title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: ''
+    category_id: null, title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: ''
   });
   const [submitLoading, setSubmitLoading] = useState(false);
 
@@ -39,8 +42,30 @@ export default function ManageBooksScreen() {
     }
   };
 
+  // 🚀 REVISI UTAMA: Mengambil data murni kategori menggunakan axiosInstance global
+  const loadCategoriesFromBackend = async () => {
+    try {
+      const res = await axiosInstance.get('/categories');
+      
+      // Mengatasi fleksibilitas format envelope { success, message, data } atau langsung array data
+      if (res.data && res.data.success && res.data.data) {
+        setCategories(res.data.data);
+      } else if (res.data && Array.isArray(res.data)) {
+        setCategories(res.data);
+      } else if (res.data && Array.isArray(res.data.data)) {
+        setCategories(res.data.data);
+      } else {
+        setCategories([]);
+      }
+    } catch (err) {
+      console.log("Gagal memuat kategori via axiosInstance. Kategori diatur kosong.");
+      setCategories([]); 
+    }
+  };
+
   useEffect(() => {
     loadAdminCatalog();
+    loadCategoriesFromBackend();
   }, []);
 
   const pickImageFromDevice = async () => {
@@ -64,7 +89,6 @@ export default function ManageBooksScreen() {
     }
   };
 
-  // 🚀 FUNGSI BARU: Pemicu Buka Pop-up QR Code
   const openQrModal = (book) => {
     if (!book.qr_code) {
       Alert.alert('Peringatan ⚠️', 'Buku lama ini belum memiliki data QR Code Token, silakan edit lalu simpan ulang terlebih dahulu.');
@@ -77,7 +101,8 @@ export default function ManageBooksScreen() {
   const openAddModal = () => {
     setSelectedBookId(null);
     setImageSourceType('url');
-    setForm({ title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: '' });
+    setDropdownOpen(false);
+    setForm({ category_id: null, title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: '' });
     setModalVisible(true);
   };
 
@@ -85,8 +110,10 @@ export default function ManageBooksScreen() {
     setSelectedBookId(book.id);
     const isUrl = book.cover_image && (book.cover_image.startsWith('http') || book.cover_image.startsWith('data:'));
     setImageSourceType(isUrl ? 'url' : 'upload');
+    setDropdownOpen(false);
 
     setForm({
+      category_id: book.category_id || null,
       title: book.title,
       author: book.author,
       publisher: book.publisher || '',
@@ -150,6 +177,8 @@ export default function ManageBooksScreen() {
     );
   };
 
+  const selectedCategoryName = categories.find(c => c.id === form.category_id)?.name || 'Pilih Kategori Klasifikasi...';
+
   const renderAdminBookRow = ({ item }) => (
     <View style={styles.bookRowCard}>
       <Image source={{ uri: item.cover_image || PLACEHOLDER_COVER }} style={styles.rowCover} resizeMode="cover" />
@@ -161,8 +190,6 @@ export default function ManageBooksScreen() {
           <Text style={styles.stockLabel}>• Sisa: <Text style={styles.boldSuccessText}>{item.available_stock || 0}</Text></Text>
         </View>
       </View>
-      
-      {/* 🚀 UPGRADE: Kolom Tombol Aksi Row (Kini Berjumlah 3 Tombol) */}
       <View style={styles.rowActions}>
         <TouchableOpacity style={styles.qrActionBtn} onPress={() => openQrModal(item)}>
           <Ionicons name="qr-code-outline" size={17} color={colors.primary} />
@@ -205,7 +232,7 @@ export default function ManageBooksScreen() {
         <Ionicons name="add" size={28} color="#FFFFFF" />
       </TouchableOpacity>
 
-      {/* 4. MODAL FORM INPUT POPUP */}
+      {/* MODAL FORM INPUT POPUP */}
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalBlurOverlay}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalFormWrapper}>
@@ -218,6 +245,45 @@ export default function ManageBooksScreen() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.formScrollPadding}>
+              
+              <Text style={styles.inputLabel}>Kategori Klasifikasi Buku</Text>
+              <TouchableOpacity 
+                style={styles.dropdownTriggerBox} 
+                activeOpacity={0.8} 
+                onPress={() => setDropdownOpen(!dropdownOpen)}
+              >
+                <Text style={[styles.dropdownTriggerText, form.category_id && { color: '#000000' }]}>
+                  {selectedCategoryName}
+                </Text>
+                <Ionicons name={dropdownOpen ? "chevron-up" : "chevron-down"} size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+
+              {dropdownOpen && (
+                <View style={styles.dropdownExpandContainer}>
+                  {categories.length === 0 ? (
+                    <View style={styles.dropdownItemRow}>
+                      <Text style={[styles.dropdownItemText, { color: colors.textSecondary }]}>Tidak ada kategori di database</Text>
+                    </View>
+                  ) : (
+                    categories.map((cat) => (
+                      <TouchableOpacity
+                        key={'drop-cat-' + cat.id}
+                        style={[styles.dropdownItemRow, form.category_id === cat.id && { backgroundColor: '#F4F1FE' }]}
+                        onPress={() => {
+                          setForm({ ...form, category_id: cat.id });
+                          setDropdownOpen(false);
+                        }}
+                      >
+                        <Text style={[styles.dropdownItemText, form.category_id === cat.id && { color: colors.primary, fontWeight: '700' }]}>
+                          {cat.name}
+                        </Text>
+                        {form.category_id === cat.id && <Ionicons name="checkmark" size={16} color={colors.primary} />}
+                      </TouchableOpacity>
+                    ))
+                  )}
+                </View>
+              )}
+
               <Text style={styles.inputLabel}>Judul Buku *</Text>
               <TextInput style={styles.formInputBox} placeholder="Masukkan judul lengkap buku..." value={form.title} onChangeText={(text) => setForm({...form, title: text})} />
 
@@ -287,14 +353,13 @@ export default function ManageBooksScreen() {
         </View>
       </Modal>
 
-      {/* 🚀 MODAL POPUP TERBARU: Khusus Menampilkan QR Code Token Hasil Produksi Backend */}
+      {/* MODAL POPUP PREVIEW QR CODE */}
       <Modal animationType="fade" transparent={true} visible={qrModalVisible} onRequestClose={() => setQrModalVisible(false)}>
         <View style={styles.modalCenterOverlay}>
           <View style={styles.qrCardWrapper}>
             <Text style={styles.qrModalTitle} numberOfLines={1}>{activeQrData.title}</Text>
             <Text style={styles.qrModalSubtitle}>TOKEN IDENTIFIKASI QR CODE RESMI</Text>
             
-            {/* Area Box Gambar QR Code Base64 atau API Auto-Generate */}
             <View style={styles.qrImageContainer}>
               {activeQrData.qr_code ? (
                 <Image 
@@ -308,7 +373,7 @@ export default function ManageBooksScreen() {
                 />
               ) : null}
             </View>
-            
+
             <Text style={styles.qrInstructionText}>Arahkan kamera HP mahasiswa ke kode di atas untuk memproses peminjaman kilat.</Text>
             
             <TouchableOpacity style={styles.closeQrBtn} onPress={() => setQrModalVisible(false)} activeOpacity={0.8}>
@@ -337,13 +402,10 @@ const styles = StyleSheet.create({
   stockLabel: { fontSize: 11, color: colors.textSecondary },
   boldDarkText: { fontWeight: 'bold', color: '#000000' },
   boldSuccessText: { fontWeight: 'bold', color: colors.success },
-  
-  // Style Tombol Row Actions (Kini 3 Tombol Senada)
   rowActions: { flexDirection: 'row', gap: 5, paddingLeft: 4 },
   qrActionBtn: { backgroundColor: '#F0EFFF', padding: 7, borderRadius: 8 },
   editActionBtn: { backgroundColor: '#F5F3FF', padding: 7, borderRadius: 8 },
   deleteActionBtn: { backgroundColor: '#FCE8E6', padding: 7, borderRadius: 8 },
-  
   floatingAddBtn: { position: 'absolute', bottom: 30, right: 24, backgroundColor: colors.primary, width: 56, height: 56, borderRadius: 28, justifyContent: 'center', alignItems: 'center', elevation: 6, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 6 },
   modalBlurOverlay: { flex: 1, backgroundColor: 'rgba(30, 27, 46, 0.5)', justifyContent: 'flex-end' },
   modalFormWrapper: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 24, paddingTop: 20, paddingBottom: Platform.OS === 'ios' ? 40 : 34, maxHeight: '85%', width: '100%' },
@@ -370,15 +432,20 @@ const styles = StyleSheet.create({
   uploadBoxSubText: { fontSize: 10, color: colors.textSecondary, marginTop: 2 },
   uploadedPreviewBox: { width: '100%', height: '100%', alignItems: 'center', justifyContent: 'center' },
   miniPreviewImage: { width: 50, height: 68, borderRadius: 6, marginBottom: 4 },
-
-  //  STYLING BARU: MODAL POPUP KHUSUS PREVIEW QR CODE
   modalCenterOverlay: { flex: 1, backgroundColor: 'rgba(30, 27, 46, 0.6)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
   qrCardWrapper: { backgroundColor: '#FFFFFF', width: '100%', borderRadius: 24, padding: 24, alignItems: 'center', elevation: 10, shadowColor: '#000000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 12 },
   qrModalTitle: { fontSize: 16, fontWeight: '900', color: colors.textPrimary, textAlign: 'center', width: '100%' },
   qrModalSubtitle: { fontSize: 9, fontWeight: '800', color: colors.secondary, marginTop: 4, letterSpacing: 1 },
-  qrImageContainer: { width: 200, height: 200, backgroundColor: '#F8FAFC', borderRadius: 16, borderWidth: 1, borderColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', marginTop: 20, marginBottom: 16, pading: 12 },
+  qrImageContainer: { width: 200, height: 200, backgroundColor: '#F8FAFC', borderRadius: 16, borderWidth: 1, borderColor: '#F1F5F9', justifyContent: 'center', alignItems: 'center', marginTop: 20, marginBottom: 16 },
   bigQrCodeImage: { width: 180, height: 180 },
   qrInstructionText: { fontSize: 11, color: colors.textSecondary, textAlign: 'center', lineHeight: 16, paddingHorizontal: 10, marginBottom: 24 },
   closeQrBtn: { backgroundColor: colors.primary, width: '100%', height: 46, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  closeQrBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' }
+  closeQrBtnText: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+
+  // DROPDOWN BOX CATEGORY STYLE
+  dropdownTriggerBox: { flexDirection: 'row', backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 14, height: 44, alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  dropdownTriggerText: { fontSize: 13, color: '#94A3B8', fontWeight: '500' },
+  dropdownExpandContainer: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, marginTop: -12, marginBottom: 16, overflow: 'hidden', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4 },
+  dropdownItemRow: { flexDirection: 'row', height: 40, alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 14, borderBottomWidth: 1, borderBottomColor: '#F1F5F9' },
+  dropdownItemText: { fontSize: 13, color: '#334155', fontWeight: '500' }
 });
