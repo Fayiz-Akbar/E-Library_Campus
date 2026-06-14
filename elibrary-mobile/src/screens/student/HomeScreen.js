@@ -1,17 +1,24 @@
 // src/screens/student/HomeScreen.js
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, FlatList, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View, ScrollView, FlatList, Image, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; 
 import { colors } from '../../constants/colors';
 import { useHome } from '../../hooks/useHome';
 
-// Gambar alternatif premium jika cover_image dari backend bernilai null
 const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';
 
 export default function HomeScreen({ navigation }) {
   const { books, loading, error, refreshData } = useHome();
+  const [localSearch, setLocalSearch] = useState(''); // State penampung ketikan di Home
 
-  // Komponen Card Buku Populer (Horizontal Slider)
+  // Fungsi pemicu pindah ke katalog sambil bawa parameter ketikan
+  const handleSearchSubmit = () => {
+    if (localSearch.trim() !== '') {
+      navigation.navigate('Katalog', { searchQuery: localSearch });
+      setLocalSearch(''); // Reset kolom setelah pindah
+    }
+  };
+
   const renderPopularBook = ({ item }) => (
     <TouchableOpacity style={styles.popularCard} activeOpacity={0.8}>
       <View style={styles.imageShadowContainer}>
@@ -28,7 +35,6 @@ export default function HomeScreen({ navigation }) {
     </TouchableOpacity>
   );
 
-  // Komponen List Buku Terbaru (Vertikal List)
   const renderLatestBook = ({ item }) => (
     <TouchableOpacity style={styles.latestCard} activeOpacity={0.7}>
       <Image
@@ -45,9 +51,7 @@ export default function HomeScreen({ navigation }) {
               {item.available_stock > 0 ? `${item.available_stock} Tersedia` : 'Habis'}
             </Text>
           </View>
-          {item.publisher && (
-            <Text style={styles.publisherText} numberOfLines={1}>• {item.publisher}</Text>
-          )}
+          {item.publisher && <Text style={styles.publisherText} numberOfLines={1}>• {item.publisher}</Text>}
         </View>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.primary} />
@@ -57,36 +61,38 @@ export default function HomeScreen({ navigation }) {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces={true}>
       
-      {/* 1. HEADER DENGAN DEKORASI & SEARCH BAR */}
+      {/* 1. HEADER */}
       <View style={styles.headerContainer}>
         <View style={styles.circleBg1} />
         <View style={styles.circleBg2} />
         
         <View style={styles.headerTopRow}>
           <View style={styles.profileSection}>
-            <View style={styles.avatarPlaceholder}>
-              <Text style={styles.avatarText}>F</Text>
-            </View>
+            <View style={styles.avatarPlaceholder}><Text style={styles.avatarText}>F</Text></View>
             <View style={styles.profileTexts}>
               <Text style={styles.welcomeText}>Selamat Datang 👋</Text>
               <Text style={styles.usernameText}>Fayiz Akbar</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.notificationButton} activeOpacity={0.7}>
+          <TouchableOpacity style={styles.notificationButton}>
             <Ionicons name="notifications" size={20} color={colors.primary} />
             <View style={styles.notifBadge} />
           </TouchableOpacity>
         </View>
 
-        {/* AKSES KLIK: Mengetuk search bar ini langsung mengarahkan ke tab Katalog */}
-        <TouchableOpacity 
-          style={styles.searchBarFake} 
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate('Katalog')}
-        >
+        {/* INPUT PENCARIAN AKTIF */}
+        <View style={styles.searchBarReal}>
           <Ionicons name="search" size={18} color={colors.textSecondary} style={{ marginRight: 10 }} />
-          <Text style={styles.searchPlaceholderText}>Cari judul buku, penulis, atau ISBN...</Text>
-        </TouchableOpacity>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Cari buku langsung di sini..."
+            placeholderTextColor={colors.textSecondary}
+            value={localSearch}
+            onChangeText={(text) => setLocalSearch(text)}
+            onSubmitEditing={handleSearchSubmit} // Ketika ditekan 'Search/Enter' di keyboard
+            returnKeyType="search"
+          />
+        </View>
       </View>
 
       {/* 2. FLOATING SUMMARY CARD */}
@@ -106,28 +112,20 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
 
-      {/* REGION HANDLING STATE API */}
+      {/* DATA AREA */}
       {loading ? (
         <View style={styles.centerSection}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Menghubungkan ke Supabase...</Text>
         </View>
       ) : error ? (
-        <View style={styles.errorContainer}>
-          <Ionicons name="cloud-offline" size={40} color={colors.danger} />
-          <Text style={styles.errorText}>{error}</Text>
-          <TouchableOpacity style={styles.refreshButton} onPress={refreshData}>
-            <Text style={styles.refreshButtonText}>Coba Lagi</Text>
-          </TouchableOpacity>
-        </View>
+        <View style={styles.errorContainer}><Text>{error}</Text></View>
       ) : (
         <>
-          {/* 3. SECTION REKOMENDASI POPULER (HORIZONTAL) */}
+          {/* 3. REKOMENDASI POPULER */}
           <View style={styles.sectionArea}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Rekomendasi Populer</Text>
-              {/* AKSES KLIK: Mengetuk Lihat Semua langsung ke tab Katalog */}
-              <TouchableOpacity onPress={() => navigation.navigate('Katalog')} activeOpacity={0.6}>
+              <TouchableOpacity onPress={() => navigation.navigate('Katalog')}>
                 <Text style={styles.viewAllText}>Lihat Semua</Text>
               </TouchableOpacity>
             </View>
@@ -141,7 +139,7 @@ export default function HomeScreen({ navigation }) {
             />
           </View>
 
-          {/* 4. SECTION KOLEKSI TERBARU (VERTIKAL) */}
+          {/* 4. KOLEKSI TERBARU */}
           <View style={[styles.sectionArea, { marginBottom: 40 }]}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Koleksi Buku Terbaru</Text>
@@ -163,18 +161,7 @@ export default function HomeScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFF' },
-  
-  // Header Component Styling
-  headerContainer: {
-    backgroundColor: colors.primary,
-    paddingTop: 65, 
-    paddingHorizontal: 24,
-    paddingBottom: 75,
-    position: 'relative',
-    overflow: 'hidden',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-  },
+  headerContainer: { backgroundColor: colors.primary, paddingTop: 65, paddingHorizontal: 24, paddingBottom: 75, position: 'relative', overflow: 'hidden', borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
   circleBg1: { position: 'absolute', width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.07)', top: -40, right: -30 },
   circleBg2: { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.04)', bottom: -40, left: -20 },
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
@@ -184,36 +171,11 @@ const styles = StyleSheet.create({
   profileTexts: { marginLeft: 12 },
   welcomeText: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
   usernameText: { color: colors.textOnPrimary, fontSize: 16, fontWeight: 'bold' },
-  notificationButton: { backgroundColor: '#FFFFFF', padding: 10, borderRadius: 12, position: 'relative' },
+  notificationButton: { backgroundColor: '#FFFFFF', padding: 10, borderRadius: 12 },
   notifBadge: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: colors.danger, top: 10, right: 10 },
-  
-  // Fake Search Bar Styling
-  searchBarFake: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  searchPlaceholderText: { color: colors.textSecondary, fontSize: 13 },
-
-  // Floating Summary Card Styling
-  floatingSummaryCard: {
-    backgroundColor: '#FFFFFF',
-    marginHorizontal: 24,
-    borderRadius: 18,
-    padding: 16,
-    marginTop: -40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    elevation: 6,
-    shadowColor: '#7C3AED',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-  },
+  searchBarReal: { flexDirection: 'row', backgroundColor: '#FFFFFF', paddingHorizontal: 16, borderRadius: 14, alignItems: 'center', height: 46 },
+  searchInput: { flex: 1, fontSize: 13, color: colors.textPrimary, height: '100%' },
+  floatingSummaryCard: { backgroundColor: '#FFFFFF', marginHorizontal: 24, borderRadius: 18, padding: 16, marginTop: -40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 6, shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
   summaryLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   bookIconContainer: { backgroundColor: colors.primary, padding: 10, borderRadius: 12 },
   summaryTexts: { marginLeft: 12, flex: 1 },
@@ -222,45 +184,19 @@ const styles = StyleSheet.create({
   summaryRight: { alignItems: 'center', borderLeftWidth: 1, borderColor: '#F0EFFF', paddingLeft: 14 },
   summaryNumber: { fontSize: 22, fontWeight: 'bold', color: colors.primary },
   summaryUnit: { fontSize: 10, color: colors.textSecondary },
-
-  // List Layout Styling
   sectionArea: { marginTop: 30 },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 24, marginBottom: 12 },
   sectionTitle: { fontSize: 15, fontWeight: 'bold', color: colors.textPrimary },
   viewAllText: { fontSize: 12, fontWeight: 'bold', color: colors.primary },
-
-  // Horizontal List Item Styling
   horizontalScrollPadding: { paddingLeft: 24, paddingRight: 10 },
   popularCard: { width: 130, marginRight: 14 },
-  imageShadowContainer: {
-    borderRadius: 14,
-    backgroundColor: '#E5E7EB',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
+  imageShadowContainer: { borderRadius: 14, backgroundColor: '#E5E7EB', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 4 },
   popularImage: { width: 130, height: 175, borderRadius: 14 },
   popularInfo: { marginTop: 6 },
   bookTitle: { fontSize: 13, fontWeight: 'bold', color: colors.textPrimary },
   bookAuthor: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
-
-  // Vertical List Item Styling
   verticalListPadding: { paddingHorizontal: 24 },
-  latestCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    marginBottom: 10,
-    padding: 10,
-    borderRadius: 14,
-    alignItems: 'center',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.02,
-    shadowRadius: 2,
-  },
+  latestCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', marginBottom: 10, padding: 10, borderRadius: 14, alignItems: 'center', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02, shadowRadius: 2 },
   latestImage: { width: 50, height: 68, borderRadius: 10, backgroundColor: colors.surface },
   latestDetails: { flex: 1, marginLeft: 14 },
   latestTitle: { fontSize: 13, fontWeight: 'bold', color: colors.textPrimary },
@@ -273,12 +209,6 @@ const styles = StyleSheet.create({
   textSuccess: { color: '#137333' },
   textDanger: { color: '#C5221F' },
   publisherText: { fontSize: 11, color: colors.textSecondary },
-
-  // Status Info Styling
-  centerSection: { marginTop: 50, alignItems: 'center' },
-  loadingText: { marginTop: 10, color: colors.textSecondary, fontSize: 12 },
-  errorContainer: { padding: 40, alignItems: 'center', justifyContent: 'center' },
-  errorText: { color: colors.danger, textAlign: 'center', marginBottom: 15, fontSize: 14 },
-  refreshButton: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
-  refreshButtonText: { color: colors.textOnPrimary, fontWeight: 'bold' },
+  centerSection: { marginTop: 40, alignItems: 'center' },
+  errorContainer: { padding: 20, alignItems: 'center' }
 });
