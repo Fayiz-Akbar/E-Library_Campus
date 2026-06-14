@@ -1,4 +1,6 @@
+// src/controllers/bookController.js
 const bookModel = require('../models/bookModel');
+const { generateBookQR } = require('../utils/generateQRCode'); // <=== Import utilitas generator QR Code kita
 
 // GET /api/books (Mendukung /api/books?search=...&category=...)
 const getAll = async (req, res) => {
@@ -66,7 +68,7 @@ const getById = async (req, res) => {
   }
 };
 
-// POST /api/books
+// POST /api/books (Mendukung Penerbitan QR Code Otomatis)
 const create = async (req, res) => {
   try {
     const { category_id, title, author, publisher, isbn, summary, cover_image, stock } = req.body;
@@ -79,6 +81,7 @@ const create = async (req, res) => {
       });
     }
 
+    // 1. Simpan data buku awal ke database
     const newBook = await bookModel.createBook({
       category_id: category_id || null,
       title,
@@ -90,10 +93,18 @@ const create = async (req, res) => {
       stock: parseInt(stock) || 1
     });
 
+    // 2. Buat data QR Code Base64 memanfaatkan ID buku yang baru terbentuk
+    const qrCodeData = await generateBookQR(newBook.id);
+
+    // 3. Update field qr_code pada buku tersebut memakai model updateBook bawaan kamu
+    const finalBook = await bookModel.updateBook(newBook.id, {
+      qr_code: qrCodeData
+    });
+
     return res.status(201).json({
       success: true,
       message: 'Buku baru berhasil didaftarkan dan QR Code token tercipta',
-      data: newBook,
+      data: finalBook, // Kita kembalikan data finalBook yang sudah tertanam QR Code
     });
   } catch (error) {
     return res.status(500).json({
