@@ -5,12 +5,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { useHome } from '../../hooks/useHome';
 
-// Gambar tiruan cover buku premium jika admin tidak mengupload cover_image
+// Gambar alternatif premium jika cover_image dari backend bernilai null
 const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';
 
-export default function HomeScreen() {
+export default function HomeScreen({ navigation }) {
   const { books, loading, error, refreshData } = useHome();
 
+  // Komponen Card Buku Populer (Horizontal Slider)
   const renderPopularBook = ({ item }) => (
     <TouchableOpacity style={styles.popularCard} activeOpacity={0.8}>
       <View style={styles.imageShadowContainer}>
@@ -27,6 +28,7 @@ export default function HomeScreen() {
     </TouchableOpacity>
   );
 
+  // Komponen List Buku Terbaru (Vertikal List)
   const renderLatestBook = ({ item }) => (
     <TouchableOpacity style={styles.latestCard} activeOpacity={0.7}>
       <Image
@@ -43,7 +45,9 @@ export default function HomeScreen() {
               {item.available_stock > 0 ? `${item.available_stock} Tersedia` : 'Habis'}
             </Text>
           </View>
-          {item.publisher && <Text style={styles.publisherText} numberOfLines={1}>• {item.publisher}</Text>}
+          {item.publisher && (
+            <Text style={styles.publisherText} numberOfLines={1}>• {item.publisher}</Text>
+          )}
         </View>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.primary} />
@@ -53,30 +57,36 @@ export default function HomeScreen() {
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces={true}>
       
-      {/* 1. HEADER DENGAN SEARCH BAR PANDING (BIAR PADAT) */}
+      {/* 1. HEADER DENGAN DEKORASI & SEARCH BAR */}
       <View style={styles.headerContainer}>
         <View style={styles.circleBg1} />
         <View style={styles.circleBg2} />
         
         <View style={styles.headerTopRow}>
           <View style={styles.profileSection}>
-            <View style={styles.avatarPlaceholder}><Text style={styles.avatarText}>F</Text></View>
+            <View style={styles.avatarPlaceholder}>
+              <Text style={styles.avatarText}>F</Text>
+            </View>
             <View style={styles.profileTexts}>
               <Text style={styles.welcomeText}>Selamat Datang 👋</Text>
               <Text style={styles.usernameText}>Fayiz Akbar</Text>
             </View>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
+          <TouchableOpacity style={styles.notificationButton} activeOpacity={0.7}>
             <Ionicons name="notifications" size={20} color={colors.primary} />
             <View style={styles.notifBadge} />
           </TouchableOpacity>
         </View>
 
-        {/* REKAYASA SEARCH BAR DI DALAM HEADER */}
-        <View style={styles.searchBarFake}>
+        {/* AKSES KLIK: Mengetuk search bar ini langsung mengarahkan ke tab Katalog */}
+        <TouchableOpacity 
+          style={styles.searchBarFake} 
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate('Katalog')}
+        >
           <Ionicons name="search" size={18} color={colors.textSecondary} style={{ marginRight: 10 }} />
           <Text style={styles.searchPlaceholderText}>Cari judul buku, penulis, atau ISBN...</Text>
-        </View>
+        </TouchableOpacity>
       </View>
 
       {/* 2. FLOATING SUMMARY CARD */}
@@ -96,7 +106,7 @@ export default function HomeScreen() {
         </View>
       </View>
 
-      {/* RENDER UTAMA */}
+      {/* REGION HANDLING STATE API */}
       {loading ? (
         <View style={styles.centerSection}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -104,15 +114,22 @@ export default function HomeScreen() {
         </View>
       ) : error ? (
         <View style={styles.errorContainer}>
+          <Ionicons name="cloud-offline" size={40} color={colors.danger} />
           <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity style={styles.refreshButton} onPress={refreshData}>
+            <Text style={styles.refreshButtonText}>Coba Lagi</Text>
+          </TouchableOpacity>
         </View>
       ) : (
         <>
-          {/* 3. REKOMENDASI POPULER */}
+          {/* 3. SECTION REKOMENDASI POPULER (HORIZONTAL) */}
           <View style={styles.sectionArea}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Rekomendasi Populer</Text>
-              <Text style={styles.viewAllText}>Lihat Semua</Text>
+              {/* AKSES KLIK: Mengetuk Lihat Semua langsung ke tab Katalog */}
+              <TouchableOpacity onPress={() => navigation.navigate('Katalog')} activeOpacity={0.6}>
+                <Text style={styles.viewAllText}>Lihat Semua</Text>
+              </TouchableOpacity>
             </View>
             <FlatList
               data={books.slice(0, 5)} 
@@ -124,7 +141,7 @@ export default function HomeScreen() {
             />
           </View>
 
-          {/* 4. KOLEKSI TERBARU */}
+          {/* 4. SECTION KOLEKSI TERBARU (VERTIKAL) */}
           <View style={[styles.sectionArea, { marginBottom: 40 }]}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Koleksi Buku Terbaru</Text>
@@ -146,9 +163,11 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FAFAFF' },
+  
+  // Header Component Styling
   headerContainer: {
     backgroundColor: colors.primary,
-    paddingTop: 65, // Ditambah jarak ekstra agar nembus ke atas notch iPhone dengan anggun
+    paddingTop: 65, 
     paddingHorizontal: 24,
     paddingBottom: 75,
     position: 'relative',
@@ -165,10 +184,10 @@ const styles = StyleSheet.create({
   profileTexts: { marginLeft: 12 },
   welcomeText: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
   usernameText: { color: colors.textOnPrimary, fontSize: 16, fontWeight: 'bold' },
-  notificationButton: { backgroundColor: '#FFFFFF', padding: 10, borderRadius: 12 },
+  notificationButton: { backgroundColor: '#FFFFFF', padding: 10, borderRadius: 12, position: 'relative' },
   notifBadge: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: colors.danger, top: 10, right: 10 },
   
-  // Search Bar Styling
+  // Fake Search Bar Styling
   searchBarFake: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
@@ -179,6 +198,7 @@ const styles = StyleSheet.create({
   },
   searchPlaceholderText: { color: colors.textSecondary, fontSize: 13 },
 
+  // Floating Summary Card Styling
   floatingSummaryCard: {
     backgroundColor: '#FFFFFF',
     marginHorizontal: 24,
@@ -203,11 +223,13 @@ const styles = StyleSheet.create({
   summaryNumber: { fontSize: 22, fontWeight: 'bold', color: colors.primary },
   summaryUnit: { fontSize: 10, color: colors.textSecondary },
 
+  // List Layout Styling
   sectionArea: { marginTop: 30 },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 24, marginBottom: 12 },
   sectionTitle: { fontSize: 15, fontWeight: 'bold', color: colors.textPrimary },
   viewAllText: { fontSize: 12, fontWeight: 'bold', color: colors.primary },
 
+  // Horizontal List Item Styling
   horizontalScrollPadding: { paddingLeft: 24, paddingRight: 10 },
   popularCard: { width: 130, marginRight: 14 },
   imageShadowContainer: {
@@ -224,6 +246,7 @@ const styles = StyleSheet.create({
   bookTitle: { fontSize: 13, fontWeight: 'bold', color: colors.textPrimary },
   bookAuthor: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
 
+  // Vertical List Item Styling
   verticalListPadding: { paddingHorizontal: 24 },
   latestCard: {
     flexDirection: 'row',
@@ -238,7 +261,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.02,
     shadowRadius: 2,
   },
-  latestImage: { width: 50, height: 68, borderRadius: 10 },
+  latestImage: { width: 50, height: 68, borderRadius: 10, backgroundColor: colors.surface },
   latestDetails: { flex: 1, marginLeft: 14 },
   latestTitle: { fontSize: 13, fontWeight: 'bold', color: colors.textPrimary },
   latestAuthor: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
@@ -251,8 +274,11 @@ const styles = StyleSheet.create({
   textDanger: { color: '#C5221F' },
   publisherText: { fontSize: 11, color: colors.textSecondary },
 
+  // Status Info Styling
   centerSection: { marginTop: 50, alignItems: 'center' },
   loadingText: { marginTop: 10, color: colors.textSecondary, fontSize: 12 },
-  errorContainer: { padding: 30, alignItems: 'center' },
-  errorText: { color: colors.danger, textAlign: 'center' },
+  errorContainer: { padding: 40, alignItems: 'center', justifyContent: 'center' },
+  errorText: { color: colors.danger, textAlign: 'center', marginBottom: 15, fontSize: 14 },
+  refreshButton: { backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 },
+  refreshButtonText: { color: colors.textOnPrimary, fontWeight: 'bold' },
 });
