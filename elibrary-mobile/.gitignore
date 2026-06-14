@@ -57,3 +57,5 @@ yarn-error.*
 .idea/
 .vscode/
 *.iml
+
+assets/images/

@@ -229,8 +229,8 @@ Status: `x` = belum dikerjakan, `o` = sudah selesai. AI tolong update tanda ini 
 - [x] API admin users (list, update status/role, stats)
 
 ### Buku & Katalog (Person B)
-- [x] Halaman Home/Dashboard mahasiswa
-- [x] Halaman Katalog Buku (search & filter)
+- [o] Halaman Home/Dashboard mahasiswa
+- [o] Halaman Katalog Buku (search & filter)
 - [x] Halaman Detail Buku
 - [x] API list & detail buku
 - [x] Admin: Manajemen Buku (CRUD + generate QR)
