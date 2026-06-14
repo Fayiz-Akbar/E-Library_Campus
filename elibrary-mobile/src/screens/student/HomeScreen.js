@@ -27,7 +27,8 @@ export default function HomeScreen() {
         source={item.cover_image ? { uri: item.cover_image } : require('../../assets/images/book-placeholder.png')}
         style={styles.latestImage}
       />
-      <div style={styles.latestDetails}>
+      {/* PERBAIKAN: Mengubah <div> menjadi <View> sesuai standar React Native */}
+      <View style={styles.latestDetails}>
         <Text style={styles.latestTitle}>{item.title}</Text>
         <Text style={styles.latestAuthor}>Oleh: {item.author}</Text>
         <View style={styles.badgeContainer}>
@@ -35,7 +36,7 @@ export default function HomeScreen() {
             {item.available_stock > 0 ? `Tersedia: ${item.available_stock}` : 'Kosong'}
           </Text>
         </View>
-      </div>
+      </View>
       <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
     </TouchableOpacity>
   );
@@ -80,7 +81,7 @@ export default function HomeScreen() {
           <View style={styles.sectionContainer}>
             <Text style={styles.sectionTitle}>Rekomendasi Buku Populer</Text>
             <FlatList
-              data={books.slice(0, 5)} // Menampilkan maksimal 5 buku di slider atas
+              data={books.slice(0, 5)} 
               renderItem={renderPopularBook}
               keyExtractor={(item) => 'pop-' + item.id.toString()}
               horizontal
@@ -96,7 +97,7 @@ export default function HomeScreen() {
               data={books}
               renderItem={renderLatestBook}
               keyExtractor={(item) => 'lat-' + item.id.toString()}
-              scrollEnabled={false} // Dimatikan karena sudah dibungkus ScrollView utama
+              scrollEnabled={false} 
             />
           </View>
         </>
