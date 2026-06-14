@@ -18,12 +18,11 @@ const getCategoryIcon = (name) => {
   return 'bookmark';
 };
 
-export default function CatalogScreen({ route, navigation }) { 
+export default function CatalogScreen({ route, navigation }) {
   const {
     books,
     categories,
     loading,
-    error,
     search,
     setSearch,
     selectedCategory,
@@ -37,7 +36,6 @@ export default function CatalogScreen({ route, navigation }) {
     }
   }, [route.params?.searchQuery]);
 
-  // 1. RENDER KAPSUL KATEGORI DI DALAM HEADER UNGU
   const renderCategoryItem = ({ item }) => {
     const isSelected = selectedCategory === item.id.toString();
     return (
@@ -46,41 +44,24 @@ export default function CatalogScreen({ route, navigation }) {
         onPress={() => setSelectedCategory(isSelected ? '' : item.id.toString())}
         activeOpacity={0.8}
       >
-        <Ionicons 
-          name={getCategoryIcon(item.name)} 
-          size={13} 
-          color={isSelected ? colors.primary : '#FFFFFF'} 
-          style={{ marginRight: 6 }} 
-        />
-        <Text style={[styles.categoryText, isSelected ? styles.txtActive : styles.txtInactive]}>
-          {item.name}
-        </Text>
+        <Ionicons name={getCategoryIcon(item.name)} size={13} color={isSelected ? colors.primary : '#FFFFFF'} style={{ marginRight: 6 }} />
+        <Text style={[styles.categoryText, isSelected ? styles.txtActive : styles.txtInactive]}>{item.name}</Text>
       </TouchableOpacity>
     );
   };
 
-  // 2. RENDER CARD GRID BUKU PREMIUM (DI DALAM CATALOGSCREEN.JS)
   const renderBookGridItem = ({ item }) => (
-    <TouchableOpacity 
-      style={styles.bookGridCard} 
-      activeOpacity={0.95}
-      onPress={() => navigation.navigate('BookDetail', { book: item })} // <=== TAMBAHKAN LINK ACTION INI BREE
-    >
+    <TouchableOpacity style={styles.bookGridCard} activeOpacity={0.95} onPress={() => navigation.navigate('BookDetail', { book: item })}>
       <View style={styles.coverWrapper}>
-        <Image
-          source={{ uri: item.cover_image || PLACEHOLDER_COVER }}
-          style={styles.coverImage}
-          resizeMode="cover"
-        />
+        <Image source={{ uri: item.cover_image || PLACEHOLDER_COVER }} style={styles.coverImage} resizeMode="cover" />
         <View style={[styles.floatingBadge, item.available_stock > 0 ? styles.bgSuccess : styles.bgDanger]}>
           <Text style={item.available_stock > 0 ? styles.textSuccess : styles.textDanger}>
             {item.available_stock > 0 ? `${item.available_stock} Tersedia` : 'Habis'}
           </Text>
         </View>
       </View>
-      
       <View style={styles.bookMetaInfo}>
-        <Text style={styles.metaAuthor} numberOfLines={1}>{item.author.toUpperCase()}</Text>
+        <Text style={styles.metaAuthor} numberOfLines={1}>{item.author ? item.author.toUpperCase() : 'UNKNOWN'}</Text>
         <Text style={styles.metaTitle} numberOfLines={2}>{item.title}</Text>
         <View style={styles.metaFooterRow}>
           <Text style={styles.metaPublisher} numberOfLines={1}>{item.publisher || 'Umum'}</Text>
@@ -90,7 +71,6 @@ export default function CatalogScreen({ route, navigation }) {
     </TouchableOpacity>
   );
 
-  // 3. BANNER SPOTLIGHT UNTUK MENGISI SPACE KOSONG
   const ListHeaderBanner = () => (
     <View style={styles.bannerContainer}>
       <View style={styles.bannerCircleDecor} />
@@ -108,16 +88,11 @@ export default function CatalogScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      
-      {/* DEEP PURPLE IMMERSIVE HEADER */}
       <View style={styles.headerSection}>
         <View style={styles.circleBg1} />
         <View style={styles.circleBg2} />
-
         <Text style={styles.subTitleLabel}>KATALOG DIGITAL</Text>
         <Text style={styles.mainLargeTitle}>Jelajahi Koleksi</Text>
-        
-        {/* GLOWING WHITE SEARCH BOX */}
         <View style={styles.searchContainerGlow}>
           <Ionicons name="search-outline" size={18} color={colors.primary} style={{ marginRight: 10 }} />
           <TextInput
@@ -134,8 +109,6 @@ export default function CatalogScreen({ route, navigation }) {
             </TouchableOpacity>
           )}
         </View>
-
-        {/* HORIZONTAL CHIPS KATEGORI DI DALAM HEADER */}
         <View style={styles.categoriesWrapper}>
           <FlatList
             data={categories}
@@ -148,7 +121,6 @@ export default function CatalogScreen({ route, navigation }) {
         </View>
       </View>
 
-      {/* DYNAMIC CONTENT AREA */}
       <View style={styles.gridSection}>
         {loading ? (
           <View style={styles.centerStatus}>
@@ -161,12 +133,12 @@ export default function CatalogScreen({ route, navigation }) {
             <View style={styles.emptyContainer}>
               <Ionicons name="book-outline" size={44} color={colors.textSecondary} />
               <Text style={styles.emptyMainText}>Buku Tidak Ditemukan</Text>
-              <Text style={styles.emptySubText}>Kata kunci "{search}" belum terdaftar di database Supabase kamu Bree.</Text>
+              <Text style={styles.emptySubText}>Kata kunci "{search}" belum terdaftar.</Text>
             </View>
           </View>
         ) : (
           <FlatList
-            key={2} // <=== SEKARANG SUDAH DIKUNCI DI SINI DENGAN AMAN BREE
+            key={2}
             data={books}
             renderItem={renderBookGridItem}
             keyExtractor={(item) => 'premium-grid-' + item.id.toString()}
@@ -185,40 +157,13 @@ export default function CatalogScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F6F4FE' }, 
-  headerSection: {
-    backgroundColor: colors.primary,
-    paddingTop: 65,
-    paddingHorizontal: 24,
-    paddingBottom: 12,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-    position: 'relative',
-    overflow: 'hidden',
-    elevation: 8,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-  },
+  container: { flex: 1, backgroundColor: '#F6F4FE' },
+  headerSection: { backgroundColor: colors.primary, paddingTop: 65, paddingHorizontal: 24, paddingBottom: 12, borderBottomLeftRadius: 32, borderBottomRightRadius: 32, position: 'relative', overflow: 'hidden', elevation: 8, shadowColor: colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.15, shadowRadius: 12 },
   circleBg1: { position: 'absolute', width: 180, height: 180, borderRadius: 90, backgroundColor: 'rgba(255,255,255,0.06)', top: -50, right: -30 },
   circleBg2: { position: 'absolute', width: 130, height: 130, borderRadius: 65, backgroundColor: 'rgba(255,255,255,0.04)', bottom: -20, left: -40 },
   subTitleLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.7)', letterSpacing: 1.5 },
   mainLargeTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginTop: 2, letterSpacing: -0.5 },
-  searchContainerGlow: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    alignItems: 'center',
-    height: 48,
-    marginTop: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-  },
+  searchContainerGlow: { flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 16, paddingHorizontal: 14, alignItems: 'center', height: 48, marginTop: 16, elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.05, shadowRadius: 6 },
   textInputField: { flex: 1, fontSize: 13, color: colors.textPrimary, fontWeight: '600', height: '100%' },
   categoriesWrapper: { marginTop: 18, marginBottom: 8 },
   categoryScrollPadding: { paddingRight: 14 },
@@ -228,23 +173,7 @@ const styles = StyleSheet.create({
   categoryText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.1 },
   txtActive: { color: colors.primary },
   txtInactive: { color: '#FFFFFF' },
-  bannerContainer: {
-    backgroundColor: '#6D28D9', 
-    borderRadius: 22,
-    padding: 18,
-    marginTop: 18,
-    marginBottom: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    overflow: 'hidden',
-    position: 'relative',
-    elevation: 4,
-    shadowColor: '#6D28D9',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-  },
+  bannerContainer: { backgroundColor: '#6D28D9', borderRadius: 22, padding: 18, marginTop: 18, marginBottom: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', overflow: 'hidden', position: 'relative', elevation: 4, shadowColor: '#6D28D9', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 8 },
   bannerCircleDecor: { position: 'absolute', width: 100, height: 100, borderRadius: 50, backgroundColor: 'rgba(255,255,255,0.05)', right: -10, top: -20 },
   bannerTextSection: { flex: 1, paddingRight: 10 },
   badgePromo: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.12)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, alignSelf: 'flex-start', marginBottom: 8 },
@@ -255,20 +184,7 @@ const styles = StyleSheet.create({
   gridSection: { flex: 1 },
   gridContainerPadding: { paddingHorizontal: 20, paddingBottom: 30 },
   gridRowSpacing: { justifyContent: 'space-between' },
-  bookGridCard: {
-    width: CARD_WIDTH,
-    marginBottom: 20,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    padding: 8,
-    borderWidth: 1,
-    borderColor: '#EAE6FA', 
-    elevation: 4,
-    shadowColor: colors.primary, 
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-  },
+  bookGridCard: { width: CARD_WIDTH, marginBottom: 20, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 8, borderWidth: 1, borderColor: '#EAE6FA', elevation: 4, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 6 },
   coverWrapper: { width: '100%', height: 215, borderRadius: 16, overflow: 'hidden', position: 'relative', backgroundColor: '#F1F5F9' },
   coverImage: { width: '100%', height: '100%' },
   floatingBadge: { position: 'absolute', bottom: 8, left: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },

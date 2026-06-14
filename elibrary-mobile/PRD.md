@@ -235,6 +235,7 @@ Status: `x` = belum dikerjakan, `o` = sudah selesai. AI tolong update tanda ini 
 - [o] Halaman Katalog Buku (search & filter)
 - [o] Halaman Detail Buku
 - [x] API list & detail buku
+- [x] Halaman Favorite
 - [x] Admin: Manajemen Buku (CRUD + generate QR)
 - [x] API CRUD buku + generate QR code
 - [x] API stats buku

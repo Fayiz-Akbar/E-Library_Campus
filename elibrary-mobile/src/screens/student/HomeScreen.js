@@ -9,13 +9,12 @@ const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002
 
 export default function HomeScreen({ navigation }) {
   const { books, loading, error, refreshData } = useHome();
-  const [localSearch, setLocalSearch] = useState(''); // State penampung ketikan di Home
+  const [localSearch, setLocalSearch] = useState(''); 
 
-  // Fungsi pemicu pindah ke katalog sambil bawa parameter ketikan
   const handleSearchSubmit = () => {
     if (localSearch.trim() !== '') {
       navigation.navigate('Katalog', { searchQuery: localSearch });
-      setLocalSearch(''); // Reset kolom setelah pindah
+      setLocalSearch(''); 
     }
   };
 
@@ -51,7 +50,9 @@ export default function HomeScreen({ navigation }) {
               {item.available_stock > 0 ? `${item.available_stock} Tersedia` : 'Habis'}
             </Text>
           </View>
-          {item.publisher && <Text style={styles.publisherText} numberOfLines={1}>• {item.publisher}</Text>}
+          {item.publisher ? (
+            <Text style={styles.publisherText} numberOfLines={1}>• {item.publisher}</Text>
+          ) : null}
         </View>
       </View>
       <Ionicons name="chevron-forward" size={18} color={colors.primary} />
@@ -67,13 +68,11 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.circleBg2} />
         
         <View style={styles.headerTopRow}>
-          {/* SISI KIRI: Fokus Teks Identitas Mahasiswa */}
           <View style={styles.profileTexts}>
             <Text style={styles.welcomeText}>Selamat Datang 👋</Text>
             <Text style={styles.usernameText}>Fayiz Akbar</Text>
           </View>
 
-          {/* SISI KANAN: Tombol Notifikasi & Avatar Akun Bersandingan */}
           <View style={styles.rightActionsGroup}>
             <TouchableOpacity style={styles.notificationButton}>
               <Ionicons name="notifications" size={20} color={colors.primary} />
@@ -86,7 +85,7 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* INPUT PENCARIAN AKTIF */}
+        {/* INPUT PENCARIAN AKTIF (SUDAH BERSIH DARI FLOATING COMMENT) */}
         <View style={styles.searchBarReal}>
           <Ionicons name="search" size={18} color={colors.textSecondary} style={{ marginRight: 10 }} />
           <TextInput
@@ -95,7 +94,7 @@ export default function HomeScreen({ navigation }) {
             placeholderTextColor={colors.textSecondary}
             value={localSearch}
             onChangeText={(text) => setLocalSearch(text)}
-            onSubmitEditing={handleSearchSubmit} // Ketika ditekan 'Search/Enter' di keyboard
+            onSubmitEditing={handleSearchSubmit} 
             returnKeyType="search"
           />
         </View>
@@ -124,7 +123,9 @@ export default function HomeScreen({ navigation }) {
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : error ? (
-        <View style={styles.errorContainer}><Text>{error}</Text></View>
+        <View style={styles.errorContainer}>
+          <Text style={{ color: colors.danger }}>{error}</Text>
+        </View>
       ) : (
         <>
           {/* 3. REKOMENDASI POPULER */}
@@ -170,19 +171,15 @@ const styles = StyleSheet.create({
   headerContainer: { backgroundColor: colors.primary, paddingTop: 65, paddingHorizontal: 24, paddingBottom: 75, position: 'relative', overflow: 'hidden', borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
   circleBg1: { position: 'absolute', width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.07)', top: -40, right: -30 },
   circleBg2: { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.04)', bottom: -40, left: -20 },
-  
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
   profileTexts: { flex: 1 },
   welcomeText: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
   usernameText: { color: colors.textOnPrimary, fontSize: 16, fontWeight: 'bold' },
-  
-  // Kontainer Baru untuk Grup Kanan
   rightActionsGroup: { flexDirection: 'row', alignItems: 'center' },
   notificationButton: { backgroundColor: '#FFFFFF', padding: 10, borderRadius: 12, marginRight: 10 },
   notifBadge: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: colors.danger, top: 10, right: 10 },
   avatarPlaceholder: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' },
   avatarText: { fontSize: 16, fontWeight: 'bold', color: colors.primary },
-  
   searchBarReal: { flexDirection: 'row', backgroundColor: '#FFFFFF', paddingHorizontal: 16, borderRadius: 14, alignItems: 'center', height: 46 },
   searchInput: { flex: 1, fontSize: 13, color: colors.textPrimary, height: '100%' },
   floatingSummaryCard: { backgroundColor: '#FFFFFF', marginHorizontal: 24, borderRadius: 18, padding: 16, marginTop: -40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 6, shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
