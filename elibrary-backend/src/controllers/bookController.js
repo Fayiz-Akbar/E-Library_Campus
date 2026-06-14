@@ -90,23 +90,34 @@ const create = async (req, res) => {
       isbn,
       summary,
       cover_image,
-      stock: parseInt(stock) || 1
+      stock: parseInt(stock) || 1,
+      available_stock: parseInt(stock) || 1 // Pastikan saat insert awal juga terisi
     });
 
     // 2. Buat data QR Code Base64 memanfaatkan ID buku yang baru terbentuk
     const qrCodeData = await generateBookQR(newBook.id);
 
-    // 3. Update field qr_code pada buku tersebut memakai model updateBook bawaan kamu
+    // 3. FIX UTAMA: Sertakan available_stock agar tidak kena not-null constraint PostgreSQL
     const finalBook = await bookModel.updateBook(newBook.id, {
-      qr_code: qrCodeData
+      category_id: category_id || null,
+      title: title,
+      author: author,
+      publisher: publisher || '',
+      isbn: isbn || '',
+      summary: summary || '',
+      cover_image: cover_image || '',
+      stock: parseInt(stock) || 1,
+      available_stock: parseInt(stock) || 1, // <=== KUNCI PERBAIKAN DI SINI BREE
+      qr_code: qrCodeData 
     });
 
     return res.status(201).json({
       success: true,
       message: 'Buku baru berhasil didaftarkan dan QR Code token tercipta',
-      data: finalBook, // Kita kembalikan data finalBook yang sudah tertanam QR Code
+      data: finalBook,
     });
   } catch (error) {
+    console.error("EROR ASLI NYA INI BREE ➔", error);
     return res.status(500).json({
       success: false,
       message: 'Gagal menambahkan buku baru: ' + error.message,

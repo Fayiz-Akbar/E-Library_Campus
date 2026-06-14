@@ -3,17 +3,25 @@ const express = require('express');
 const router = express.Router();
 const bookController = require('../controllers/bookController');
 
-// 1. IMPORT MIDDLEWARE PROTEKSI 
-// Catatan: Sesuaikan nama file & fungsi ekspor dengan yang dibuat temanmu ya!
-const { verifyToken } = require('../middlewares/authMiddleware'); 
-const { isAdmin } = require('../middlewares/adminMiddleware');
+// 🛠️ TEMPORARY DUMMY MIDDLEWARES
+// Kita buat fungsi palsu di sini agar Express tidak crash mencari file Person A.
+// Begitu Person A sudah menyelesaikan tugasnya, tinggal ganti baris ini dengan require asli.
+const verifyToken = (req, res, next) => {
+  console.log('--- Bypass Verification Token (Dev Mode) ---');
+  next(); 
+};
 
-// --- RUTE PUBLIC / MAHASISWA (Siapa saja boleh akses) ---
+const isAdmin = (req, res, next) => {
+  console.log('--- Bypass Validation Admin Role (Dev Mode) ---');
+  next(); 
+};
+
+// --- RUTE PUBLIC / MAHASISWA ---
 router.get('/', bookController.getAll);
 router.get('/:id', bookController.getById);
 
-// --- RUTE PRIVAT / KHUSUS ADMIN (Wajib bawa Token JWT & Ber-role Admin) ---
-router.get('/stats', [verifyToken, isAdmin], bookController.getStats); // Dikunci agar mahasiswa gak bisa intip statistik
+// --- RUTE PRIVAT / KHUSUS ADMIN ---
+router.get('/stats', [verifyToken, isAdmin], bookController.getStats);
 router.post('/', [verifyToken, isAdmin], bookController.create);
 router.put('/:id', [verifyToken, isAdmin], bookController.update);
 router.delete('/:id', [verifyToken, isAdmin], bookController.remove);

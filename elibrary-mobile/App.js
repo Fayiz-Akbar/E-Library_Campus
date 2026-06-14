@@ -9,12 +9,13 @@ import { Ionicons } from '@expo/vector-icons';
 import HomeScreen from './src/screens/student/HomeScreen';
 import CatalogScreen from './src/screens/student/CatalogScreen';
 import BookDetailScreen from './src/screens/student/BookDetailScreen';
+import ManageBooksScreen from './src/screens/admin/ManageBooksScreen'; 
 import { colors } from './src/constants/colors';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// 1. GABUNGAN MENU TAB BAWAH (DIBUAT TERPISAH)
+// 1. GABUNGAN MENU TAB BAWAH USER (TETAP BIARKAN DI SINI)
 function StudentTabs() {
   return (
     <Tab.Navigator
@@ -47,17 +48,17 @@ function StudentTabs() {
   );
 }
 
-// 2. ROOT NAVIGATION UTAMA (TEMPAT NAVIGASI STACK DIKENDALIKAN)
+// 2. ROOT NAVIGATION UTAMA 
 export default function App() {
   return (
     <NavigationContainer>
       <StatusBar barStyle="light-content" translucent={true} backgroundColor="transparent" />
       
       <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {/* Rute awal masuk langsung merender susunan Bottom Tabs */}
+        <Stack.Screen name="AdminManageBooks" component={ManageBooksScreen} />
+
+        {/* Susunan halaman user diturunkan sementara ke bawahnya */}
         <Stack.Screen name="MainTabs" component={StudentTabs} />
-        
-        {/* Halaman detail buku berdiri di luar Tab agar bisa menutup layar full */}
         <Stack.Screen name="BookDetail" component={BookDetailScreen} />
       </Stack.Navigator>
     </NavigationContainer>
