@@ -234,8 +234,7 @@ Status: `x` = belum dikerjakan, `o` = sudah selesai. AI tolong update tanda ini 
 - [o] Halaman Home/Dashboard mahasiswa
 - [o] Halaman Katalog Buku (search & filter)
 - [o] Halaman Detail Buku
-- [x] API list & detail buku
-- [x] Halaman Favorite
+- [o] API list & detail buku
 - [x] Admin: Manajemen Buku (CRUD + generate QR)
 - [x] API CRUD buku + generate QR code
 - [x] API stats buku
@@ -289,4 +288,4 @@ Project ini menggunakan **Supabase (PostgreSQL Cloud Free Tier)** baik untuk tah
 
 - Sepakati struktur API response sebelum coding agar frontend bisa pakai mock data lebih dulu.
 - Gunakan branch Git per domain (`feature/auth`, `feature/katalog`, `feature/transaksi`), merge rutin ke `develop`.
-- Dokumen ini sebaiknya disimpan di root masing-masing repo (frontend & backend) sebagai `CLAUDE.md` agar otomatis terbaca oleh Claude Code.
+

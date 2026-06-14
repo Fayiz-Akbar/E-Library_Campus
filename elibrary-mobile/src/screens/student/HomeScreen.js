@@ -18,8 +18,13 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  // 1. KARTU POPULER (BISA DIKLIK MENUJU DETAIL)
   const renderPopularBook = ({ item }) => (
-    <TouchableOpacity style={styles.popularCard} activeOpacity={0.8}>
+    <TouchableOpacity 
+      style={styles.popularCard} 
+      activeOpacity={0.8}
+      onPress={() => navigation.navigate('BookDetail', { book: item })} // <=== AKSI KLIK PINDAH KE DETAIL
+    >
       <View style={styles.imageShadowContainer}>
         <Image
           source={{ uri: item.cover_image || PLACEHOLDER_COVER }}
@@ -34,8 +39,13 @@ export default function HomeScreen({ navigation }) {
     </TouchableOpacity>
   );
 
+  // 2. KARTU TERBARU (BISA DIKLIK MENUJU DETAIL)
   const renderLatestBook = ({ item }) => (
-    <TouchableOpacity style={styles.latestCard} activeOpacity={0.7}>
+    <TouchableOpacity 
+      style={styles.latestCard} 
+      activeOpacity={0.7}
+      onPress={() => navigation.navigate('BookDetail', { book: item })} // <=== AKSI KLIK PINDAH KE DETAIL
+    >
       <Image
         source={{ uri: item.cover_image || PLACEHOLDER_COVER }}
         style={styles.latestImage}
@@ -85,7 +95,7 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* INPUT PENCARIAN AKTIF (SUDAH BERSIH DARI FLOATING COMMENT) */}
+        {/* INPUT PENCARIAN AKTIF */}
         <View style={styles.searchBarReal}>
           <Ionicons name="search" size={18} color={colors.textSecondary} style={{ marginRight: 10 }} />
           <TextInput
