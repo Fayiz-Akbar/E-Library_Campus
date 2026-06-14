@@ -86,7 +86,7 @@ export default function CatalogScreen({ route }) {
     </TouchableOpacity>
   );
 
-  // 3. SE SUTU YANG UNIK: BANNER SPOTLIGHT UNTUK MENGISI SPACE KOSONG
+  // 3. BANNER SPOTLIGHT UNTUK MENGISI SPACE KOSONG
   const ListHeaderBanner = () => (
     <View style={styles.bannerContainer}>
       <View style={styles.bannerCircleDecor} />
@@ -134,7 +134,6 @@ export default function CatalogScreen({ route }) {
         {/* HORIZONTAL CHIPS KATEGORI DI DALAM HEADER */}
         <View style={styles.categoriesWrapper}>
           <FlatList
-            key={2}
             data={categories}
             renderItem={renderCategoryItem}
             keyExtractor={(item) => 'premium-cat-' + item.id.toString()}
@@ -163,13 +162,14 @@ export default function CatalogScreen({ route }) {
           </View>
         ) : (
           <FlatList
+            key={2} // <=== SEKARANG SUDAH DIKUNCI DI SINI DENGAN AMAN BREE
             data={books}
             renderItem={renderBookGridItem}
             keyExtractor={(item) => 'premium-grid-' + item.id.toString()}
             numColumns={2}
             showsVerticalScrollIndicator={false}
             columnWrapperStyle={styles.gridRowSpacing}
-            ListHeaderComponent={ListHeaderBanner} // Pasang banner di paling atas grid
+            ListHeaderComponent={ListHeaderBanner}
             contentContainerStyle={styles.gridContainerPadding}
             onRefresh={refreshCatalog}
             refreshing={loading}
@@ -181,9 +181,7 @@ export default function CatalogScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F6F4FE' }, // Background dasar ungu pastel sangat lembut
-  
-  // Immersive Deep Purple Header
+  container: { flex: 1, backgroundColor: '#F6F4FE' }, 
   headerSection: {
     backgroundColor: colors.primary,
     paddingTop: 65,
@@ -203,8 +201,6 @@ const styles = StyleSheet.create({
   circleBg2: { position: 'absolute', width: 130, height: 130, borderRadius: 65, backgroundColor: 'rgba(255,255,255,0.04)', bottom: -20, left: -40 },
   subTitleLabel: { fontSize: 10, fontWeight: '800', color: 'rgba(255,255,255,0.7)', letterSpacing: 1.5 },
   mainLargeTitle: { fontSize: 26, fontWeight: '900', color: '#FFFFFF', marginTop: 2, letterSpacing: -0.5 },
-  
-  // Glowing White Search Box
   searchContainerGlow: {
     flexDirection: 'row',
     backgroundColor: '#FFFFFF',
@@ -220,8 +216,6 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
   },
   textInputField: { flex: 1, fontSize: 13, color: colors.textPrimary, fontWeight: '600', height: '100%' },
-
-  // Kategori Chips List di dalam Header
   categoriesWrapper: { marginTop: 18, marginBottom: 8 },
   categoryScrollPadding: { paddingRight: 14 },
   categoryPill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, marginRight: 8 },
@@ -230,10 +224,8 @@ const styles = StyleSheet.create({
   categoryText: { fontSize: 11, fontWeight: '800', letterSpacing: 0.1 },
   txtActive: { color: colors.primary },
   txtInactive: { color: '#FFFFFF' },
-
-  // Unique Spotlight Purple Banner Card
   bannerContainer: {
-    backgroundColor: '#6D28D9', // Deep Purple solid
+    backgroundColor: '#6D28D9', 
     borderRadius: 22,
     padding: 18,
     marginTop: 18,
@@ -256,8 +248,6 @@ const styles = StyleSheet.create({
   bannerMainTitle: { fontSize: 16, fontWeight: '800', color: '#FFFFFF' },
   bannerSubTitle: { fontSize: 11, color: '#E9D5FF', marginTop: 4, lineHeight: 15 },
   bannerIconDecor: { position: 'absolute', right: 12, bottom: -10 },
-
-  // Grid Layout Bookstore Premium Styles
   gridSection: { flex: 1 },
   gridContainerPadding: { paddingHorizontal: 20, paddingBottom: 30 },
   gridRowSpacing: { justifyContent: 'space-between' },
@@ -268,9 +258,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
     borderWidth: 1,
-    borderColor: '#EAE6FA', // Border ungu super soft
+    borderColor: '#EAE6FA', 
     elevation: 4,
-    shadowColor: colors.primary, // Bayangan bernuansa ungu halus
+    shadowColor: colors.primary, 
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
     shadowRadius: 6,
@@ -282,15 +272,11 @@ const styles = StyleSheet.create({
   bgDanger: { backgroundColor: 'rgba(254, 242, 242, 0.95)', borderWidth: 1, borderColor: '#FEE2E2' },
   textSuccess: { fontSize: 9, fontWeight: '800', color: '#15803D' },
   textDanger: { fontSize: 9, fontWeight: '800', color: '#B91C1C' },
-
-  // Meta Text Info Buku di bawah Cover
   bookMetaInfo: { marginTop: 10, paddingHorizontal: 4 },
   metaAuthor: { fontSize: 9, fontWeight: '800', color: colors.primary, letterSpacing: 0.8 },
   metaTitle: { fontSize: 13, fontWeight: '800', color: colors.textPrimary, marginTop: 2, lineHeight: 17, minHeight: 34 },
   metaFooterRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 6, borderTopWidth: 1, borderColor: '#F4F1FE', paddingTop: 6 },
   metaPublisher: { fontSize: 11, color: colors.textSecondary, fontWeight: '500', flex: 1, marginRight: 4 },
-
-  // States handling Layout
   centerStatus: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, paddingBottom: 40 },
   loadingStatusText: { marginTop: 12, color: colors.textSecondary, fontSize: 12, fontWeight: '600' },
   emptyContainer: { alignItems: 'center', marginTop: 40, paddingHorizontal: 20 },
