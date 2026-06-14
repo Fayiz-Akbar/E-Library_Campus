@@ -67,17 +67,23 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.circleBg2} />
         
         <View style={styles.headerTopRow}>
-          <View style={styles.profileSection}>
-            <View style={styles.avatarPlaceholder}><Text style={styles.avatarText}>F</Text></View>
-            <View style={styles.profileTexts}>
-              <Text style={styles.welcomeText}>Selamat Datang 👋</Text>
-              <Text style={styles.usernameText}>Fayiz Akbar</Text>
-            </View>
+          {/* SISI KIRI: Fokus Teks Identitas Mahasiswa */}
+          <View style={styles.profileTexts}>
+            <Text style={styles.welcomeText}>Selamat Datang 👋</Text>
+            <Text style={styles.usernameText}>Fayiz Akbar</Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton}>
-            <Ionicons name="notifications" size={20} color={colors.primary} />
-            <View style={styles.notifBadge} />
-          </TouchableOpacity>
+
+          {/* SISI KANAN: Tombol Notifikasi & Avatar Akun Bersandingan */}
+          <View style={styles.rightActionsGroup}>
+            <TouchableOpacity style={styles.notificationButton}>
+              <Ionicons name="notifications" size={20} color={colors.primary} />
+              <View style={styles.notifBadge} />
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.avatarPlaceholder} activeOpacity={0.8}>
+              <Text style={styles.avatarText}>F</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* INPUT PENCARIAN AKTIF */}
@@ -164,15 +170,19 @@ const styles = StyleSheet.create({
   headerContainer: { backgroundColor: colors.primary, paddingTop: 65, paddingHorizontal: 24, paddingBottom: 75, position: 'relative', overflow: 'hidden', borderBottomLeftRadius: 30, borderBottomRightRadius: 30 },
   circleBg1: { position: 'absolute', width: 160, height: 160, borderRadius: 80, backgroundColor: 'rgba(255,255,255,0.07)', top: -40, right: -30 },
   circleBg2: { position: 'absolute', width: 120, height: 120, borderRadius: 60, backgroundColor: 'rgba(255,255,255,0.04)', bottom: -40, left: -20 },
+  
   headerTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 },
-  profileSection: { flexDirection: 'row', alignItems: 'center' },
-  avatarPlaceholder: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' },
-  avatarText: { fontSize: 16, fontWeight: 'bold', color: colors.primary },
-  profileTexts: { marginLeft: 12 },
+  profileTexts: { flex: 1 },
   welcomeText: { color: 'rgba(255,255,255,0.7)', fontSize: 12 },
   usernameText: { color: colors.textOnPrimary, fontSize: 16, fontWeight: 'bold' },
-  notificationButton: { backgroundColor: '#FFFFFF', padding: 10, borderRadius: 12 },
+  
+  // Kontainer Baru untuk Grup Kanan
+  rightActionsGroup: { flexDirection: 'row', alignItems: 'center' },
+  notificationButton: { backgroundColor: '#FFFFFF', padding: 10, borderRadius: 12, marginRight: 10 },
   notifBadge: { position: 'absolute', width: 8, height: 8, borderRadius: 4, backgroundColor: colors.danger, top: 10, right: 10 },
+  avatarPlaceholder: { width: 42, height: 42, borderRadius: 21, backgroundColor: '#FFFFFF', justifyContent: 'center', alignItems: 'center' },
+  avatarText: { fontSize: 16, fontWeight: 'bold', color: colors.primary },
+  
   searchBarReal: { flexDirection: 'row', backgroundColor: '#FFFFFF', paddingHorizontal: 16, borderRadius: 14, alignItems: 'center', height: 46 },
   searchInput: { flex: 1, fontSize: 13, color: colors.textPrimary, height: '100%' },
   floatingSummaryCard: { backgroundColor: '#FFFFFF', marginHorizontal: 24, borderRadius: 18, padding: 16, marginTop: -40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 6, shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
