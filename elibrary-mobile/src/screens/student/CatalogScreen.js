@@ -18,7 +18,7 @@ const getCategoryIcon = (name) => {
   return 'bookmark';
 };
 
-export default function CatalogScreen({ route }) {
+export default function CatalogScreen({ route, navigation }) { 
   const {
     books,
     categories,
@@ -59,9 +59,13 @@ export default function CatalogScreen({ route }) {
     );
   };
 
-  // 2. RENDER CARD GRID BUKU PREMIUM
+  // 2. RENDER CARD GRID BUKU PREMIUM (DI DALAM CATALOGSCREEN.JS)
   const renderBookGridItem = ({ item }) => (
-    <TouchableOpacity style={styles.bookGridCard} activeOpacity={0.95}>
+    <TouchableOpacity 
+      style={styles.bookGridCard} 
+      activeOpacity={0.95}
+      onPress={() => navigation.navigate('BookDetail', { book: item })} // <=== TAMBAHKAN LINK ACTION INI BREE
+    >
       <View style={styles.coverWrapper}>
         <Image
           source={{ uri: item.cover_image || PLACEHOLDER_COVER }}
