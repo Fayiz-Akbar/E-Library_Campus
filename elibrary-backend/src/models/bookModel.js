@@ -50,7 +50,7 @@ const createBook = async (bookData) => {
   
   // Mengenerate string unik UUID v4 untuk scan QR Code peminjaman
   const qrCode = crypto.randomUUID(); 
-  const availableStock = stock; // Di awal, stok tersedia sama dengan stok total
+  const available_stock = stock; // 
 
   const queryText = `
     INSERT INTO books (category_id, title, author, publisher, isbn, summary, cover_image, stock, available_stock, qr_code)
@@ -58,6 +58,7 @@ const createBook = async (bookData) => {
     RETURNING *
   `;
   
+  // Variabel available_stock di bawah ini sekarang sudah sinkron dan terdefinisi
   const values = [category_id, title, author, publisher, isbn, summary, cover_image, stock, available_stock, qrCode];
   const result = await db.query(queryText, values);
   return result.rows[0];
