@@ -1,8 +1,9 @@
 require('dotenv').config();
 const express = require('express');
-const cors = require('cors'); // Tambahan opsional yang bagus untuk komunikasi frontend-backend kedepan
+const cors = require('cors');
 const { initDatabase } = require('./src/config/db');
-const categoryRoutes = require('./src/routes/categoryRoutes'); // Import rute kategori
+const categoryRoutes = require('./src/routes/categoryRoutes');
+const bookRoutes = require('./src/routes/bookRoutes'); // Import rute buku
 
 const app = express();
 
@@ -12,8 +13,9 @@ app.use(express.json());
 // Jalankan inisialisasi tabel database
 initDatabase();
 
-// Registrasi Base Route API untuk Kategori
+// Registrasi Base Route API
 app.use('/api/categories', categoryRoutes);
+app.use('/api/books', bookRoutes); // Registrasi rute buku ke endpoint /api/books
 
 app.get('/', (req, res) => res.json({ message: 'E-Library API berjalan!' }));
 
