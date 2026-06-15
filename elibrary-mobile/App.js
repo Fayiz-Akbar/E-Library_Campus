@@ -25,6 +25,7 @@ import HistoryScreen from './src/screens/student/HistoryScreen';
 import NotificationScreen from './src/screens/student/NotificationScreen';
 
 // Admin Screens
+import DashboardScreen from './src/screens/admin/DashboardScreen';
 import ManageBooksScreen from './src/screens/admin/ManageBooksScreen';
 import ManageUsersScreen from './src/screens/admin/ManageUsersScreen';
 import ManageTransactionsScreen from './src/screens/admin/ManageTransactionsScreen';
@@ -77,14 +78,16 @@ function StudentTabs() {
   );
 }
 
-// Tab navigator untuk admin (Kelola Buku, Kelola Anggota, Transaksi, Laporan, Profil)
+// Tab navigator untuk admin (Dashboard, Kelola Buku, Kelola Anggota, Transaksi, Laporan, Profil)
 function AdminTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName;
-          if (route.name === 'Kelola Buku') {
+          if (route.name === 'Dashboard') {
+            iconName = focused ? 'grid' : 'grid-outline';
+          } else if (route.name === 'Kelola Buku') {
             iconName = focused ? 'library' : 'library-outline';
           } else if (route.name === 'Kelola Anggota') {
             iconName = focused ? 'people' : 'people-outline';
@@ -110,6 +113,7 @@ function AdminTabs() {
         headerShown: false,
       })}
     >
+      <Tab.Screen name="Dashboard" component={DashboardScreen} />
       <Tab.Screen name="Kelola Buku" component={ManageBooksScreen} />
       <Tab.Screen name="Kelola Anggota" component={ManageUsersScreen} />
       <Tab.Screen name="Transaksi" component={ManageTransactionsScreen} />

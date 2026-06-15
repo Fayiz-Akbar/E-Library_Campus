@@ -10,6 +10,28 @@ Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
 
 Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
 
+## 2026-06-15 18:19 WIB - Person 3 Dashboard Admin
+
+### Added
+
+- Menambahkan endpoint admin `GET /api/dashboard/admin` sebagai aggregator statistik user, buku, dan transaksi.
+- Menambahkan route backend `/api/dashboard`.
+- Menambahkan API client mobile `dashboardApi`.
+- Menambahkan hook mobile `useDashboard`.
+- Menambahkan screen admin `DashboardScreen`.
+- Menambahkan tab admin `Dashboard` sebagai tab pertama.
+
+### Changed
+
+- Dashboard admin mengambil data dari backend, bukan hardcode frontend.
+- Aggregator dashboard memakai fallback nol jika salah satu sumber statistik gagal agar statistik lain tetap tampil.
+- Memperbarui dokumentasi progress, system flow, dan dokumen fitur dashboard admin.
+
+### Notes
+
+- Endpoint dashboard diproteksi `verifyToken` dan `isAdmin`.
+- Shortcut dashboard mengarah ke Manajemen Anggota, Manajemen Buku, Manajemen Transaksi, dan Laporan.
+
 ## 2026-06-15 18:07 WIB - Person 3 Report Export
 
 ### Added

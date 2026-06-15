@@ -64,6 +64,15 @@ elibrary-backend/src/routes/dashboardRoutes.js
 elibrary-backend/server.js
 ```
 
+Status implementasi branch saat ini:
+
+- Endpoint `GET /api/dashboard/admin` sudah tersedia.
+- Route `/api/dashboard` sudah terdaftar di backend.
+- Screen admin `Dashboard` sudah tersedia sebagai tab pertama.
+- Dashboard menampilkan statistik user, buku, dan transaksi dari backend.
+- Dashboard memiliki shortcut ke Manajemen Anggota, Manajemen Buku, Manajemen Transaksi, dan Laporan.
+- Jika salah satu statistik gagal, backend mengembalikan fallback nol dan warning untuk domain tersebut.
+
 ## Endpoint
 
 ### Dashboard Admin
