@@ -96,7 +96,11 @@ export default function HomeScreen({ navigation }) {
           </View>
 
           <View style={styles.rightActionsGroup}>
-            <TouchableOpacity style={styles.notificationButton}>
+            <TouchableOpacity
+              style={styles.notificationButton}
+              onPress={() => navigation.navigate('Notification')}
+              activeOpacity={0.85}
+            >
               <Ionicons name="notifications" size={20} color={colors.primary} />
               <View style={styles.notifBadge} />
             </TouchableOpacity>

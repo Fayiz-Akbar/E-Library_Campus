@@ -10,6 +10,28 @@ Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
 
 Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
 
+## 2026-06-15 16:12 WIB - Person 3 History Notification
+
+### Added
+
+- Menambahkan endpoint backend `GET /api/transactions/notifications`.
+- Menambahkan screen mobile `HistoryScreen` untuk riwayat peminjaman mahasiswa.
+- Menambahkan screen mobile `NotificationScreen` untuk reminder jatuh tempo dan keterlambatan.
+- Menambahkan hook mobile `useTransactions` untuk load riwayat, filter status, dan notifikasi.
+- Menambahkan tab mahasiswa `Riwayat` dan route stack `Notification`.
+
+### Changed
+
+- Menambahkan dukungan query filter `?status=borrowed|returned|overdue` pada endpoint history.
+- Memperluas `transactionApi` mobile dengan `fetchTransactionHistory` dan `fetchTransactionNotifications`.
+- Menghubungkan tombol notifikasi di Home mahasiswa ke screen `Notification`.
+- Memperbarui dokumentasi progress Person 3 agar mencerminkan fitur riwayat dan notifikasi yang sudah aktif.
+
+### Notes
+
+- Status `overdue` dihitung dinamis dari `due_date` jika transaksi aktif sudah melewati jatuh tempo.
+- Notifikasi menampilkan transaksi aktif yang terlambat atau akan jatuh tempo dalam 2 hari.
+
 ## 2026-06-15 15:52 WIB - Mobile Camera Scan QR
 
 ### Added

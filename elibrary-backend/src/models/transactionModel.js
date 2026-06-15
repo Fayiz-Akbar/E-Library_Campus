@@ -3,6 +3,8 @@ const { calculateFine } = require('../utils/calculateFine');
 
 const ACTIVE_TRANSACTION_STATUSES = ['borrowed', 'overdue'];
 const DEFAULT_BORROW_DAYS = 7;
+const HISTORY_STATUSES = ['borrowed', 'returned', 'overdue'];
+const DUE_SOON_DAYS = 2;
 
 const parsePositiveInteger = (value) => {
   const parsed = Number.parseInt(value, 10);
@@ -244,7 +246,45 @@ const returnBook = async ({ userId, bookId, qrCode }) => {
   }
 };
 
-const getUserHistory = async ({ requestedUserId, requester }) => {
+const getDisplayStatusSql = () => `
+  CASE
+    WHEN t.status IN ('borrowed', 'overdue') AND t.due_date < CURRENT_TIMESTAMP THEN 'overdue'
+    ELSE t.status
+  END
+`;
+
+const buildHistoryStatusFilter = (status) => {
+  if (!status) {
+    return { clause: '', values: [] };
+  }
+
+  if (!HISTORY_STATUSES.includes(status)) {
+    const error = new Error('Status riwayat tidak valid.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (status === 'overdue') {
+    return {
+      clause: `AND (${getDisplayStatusSql()}) = $2`,
+      values: [status],
+    };
+  }
+
+  if (status === 'borrowed') {
+    return {
+      clause: `AND (${getDisplayStatusSql()}) = $2`,
+      values: [status],
+    };
+  }
+
+  return {
+    clause: 'AND t.status = $2',
+    values: [status],
+  };
+};
+
+const getUserHistory = async ({ requestedUserId, requester, status }) => {
   const requesterId = parsePositiveInteger(requester.id);
   const targetUserId = parsePositiveInteger(requestedUserId);
 
@@ -260,10 +300,23 @@ const getUserHistory = async ({ requestedUserId, requester }) => {
     throw error;
   }
 
+  const statusFilter = buildHistoryStatusFilter(status);
+  const queryValues = [targetUserId, ...statusFilter.values];
+
   const result = await db.query(
     `
       SELECT
-        t.*,
+        t.id,
+        t.user_id,
+        t.book_id,
+        t.borrow_date,
+        t.due_date,
+        t.return_date,
+        t.fine_amount,
+        ${getDisplayStatusSql()} AS status,
+        t.status AS raw_status,
+        t.created_at,
+        t.updated_at,
         b.title,
         b.author,
         b.cover_image,
@@ -272,12 +325,67 @@ const getUserHistory = async ({ requestedUserId, requester }) => {
       FROM transactions t
       JOIN books b ON b.id = t.book_id
       WHERE t.user_id = $1
+      ${statusFilter.clause}
       ORDER BY t.borrow_date DESC
     `,
-    [targetUserId]
+    queryValues
   );
 
   return result.rows;
+};
+
+const getUserDueNotifications = async ({ requester }) => {
+  const requesterId = parsePositiveInteger(requester.id);
+
+  if (!requesterId) {
+    const error = new Error('User ID tidak valid.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const result = await db.query(
+    `
+      SELECT
+        t.id,
+        t.user_id,
+        t.book_id,
+        t.borrow_date,
+        t.due_date,
+        t.return_date,
+        t.fine_amount,
+        ${getDisplayStatusSql()} AS status,
+        t.status AS raw_status,
+        b.title,
+        b.author,
+        b.cover_image,
+        b.publisher,
+        b.isbn
+      FROM transactions t
+      JOIN books b ON b.id = t.book_id
+      WHERE t.user_id = $1
+        AND t.status = ANY($2)
+        AND t.due_date <= CURRENT_TIMESTAMP + ($3 * INTERVAL '1 day')
+      ORDER BY t.due_date ASC
+    `,
+    [requesterId, ACTIVE_TRANSACTION_STATUSES, DUE_SOON_DAYS]
+  );
+
+  const now = new Date();
+
+  return result.rows.map((transaction) => {
+    const dueDate = new Date(transaction.due_date);
+    const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const fine = calculateFine(transaction.due_date, now);
+    const isOverdue = transaction.status === 'overdue';
+
+    return {
+      ...transaction,
+      notification_type: isOverdue ? 'overdue' : 'due_soon',
+      days_until_due: diffDays,
+      late_days: fine.lateDays,
+      estimated_fine_amount: fine.fineAmount,
+    };
+  });
 };
 
 const getTransactionStatistics = async () => {
@@ -302,5 +410,6 @@ module.exports = {
   borrowBook,
   returnBook,
   getUserHistory,
+  getUserDueNotifications,
   getTransactionStatistics,
 };

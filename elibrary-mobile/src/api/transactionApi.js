@@ -31,6 +31,18 @@ export const returnBookByQr = async (qrCode) => {
   return response.data;
 };
 
+export const fetchTransactionHistory = async ({ userId, status } = {}) => {
+  const response = await axiosInstance.get(`/transactions/history/${userId}`, {
+    params: status && status !== 'all' ? { status } : {},
+  });
+  return response.data;
+};
+
+export const fetchTransactionNotifications = async () => {
+  const response = await axiosInstance.get('/transactions/notifications');
+  return response.data;
+};
+
 export const processTransactionQr = async ({ mode, qrCode }) => {
   if (mode === TRANSACTION_MODES.RETURN) {
     return returnBookByQr(qrCode);
