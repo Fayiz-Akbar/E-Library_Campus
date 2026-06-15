@@ -191,6 +191,22 @@ Student opens Notifikasi from Riwayat
   -> Mobile displays reminder and scan return shortcut
 ```
 
+## Flow Admin Manajemen Transaksi
+
+```text
+Admin opens Transaksi tab
+  -> Mobile calls GET /api/transactions with Bearer admin token
+  -> Optional filters: status, search, start_date, end_date
+  -> Backend verifies JWT and admin role
+  -> Backend returns transactions joined with user and book data
+  -> Admin opens transaction detail
+  -> Admin can override status to lost, damaged, or returned
+  -> Mobile sends PUT /api/transactions/:id/override
+  -> Backend records override note, time, and admin id
+  -> Backend restores stock only when override status is returned from active transaction
+  -> Mobile refreshes transaction list
+```
+
 ## Flow API Connectivity Mobile
 
 Mobile membaca base URL dari:

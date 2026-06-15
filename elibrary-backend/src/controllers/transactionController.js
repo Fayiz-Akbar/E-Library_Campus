@@ -95,6 +95,50 @@ const getNotifications = async (req, res) => {
   }
 };
 
+const getAllTransactions = async (req, res) => {
+  try {
+    const transactions = await transactionModel.getAllTransactions({
+      filters: req.query,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Berhasil mengambil semua transaksi.',
+      data: transactions,
+    });
+  } catch (error) {
+    return sendError(res, error, 'Gagal mengambil semua transaksi.');
+  }
+};
+
+const overrideTransaction = async (req, res) => {
+  try {
+    const { status, note } = req.body;
+
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: 'Status override wajib dikirim.',
+      });
+    }
+
+    const data = await transactionModel.overrideTransactionStatus({
+      transactionId: req.params.id,
+      adminId: req.user.id,
+      status,
+      note,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Status transaksi berhasil dioverride.',
+      data,
+    });
+  } catch (error) {
+    return sendError(res, error, 'Gagal override status transaksi.');
+  }
+};
+
 const getStats = async (req, res) => {
   try {
     const stats = await transactionModel.getTransactionStatistics();
@@ -119,5 +163,7 @@ module.exports = {
   returnBorrowedBook,
   getHistory,
   getNotifications,
+  getAllTransactions,
+  overrideTransaction,
   getStats,
 };

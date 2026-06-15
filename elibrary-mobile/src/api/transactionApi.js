@@ -43,6 +43,21 @@ export const fetchTransactionNotifications = async () => {
   return response.data;
 };
 
+export const fetchAdminTransactions = async (filters = {}) => {
+  const response = await axiosInstance.get('/transactions', {
+    params: filters,
+  });
+  return response.data;
+};
+
+export const overrideTransactionStatus = async ({ transactionId, status, note }) => {
+  const response = await axiosInstance.put(`/transactions/${transactionId}/override`, {
+    status,
+    note,
+  });
+  return response.data;
+};
+
 export const processTransactionQr = async ({ mode, qrCode }) => {
   if (mode === TRANSACTION_MODES.RETURN) {
     return returnBookByQr(qrCode);

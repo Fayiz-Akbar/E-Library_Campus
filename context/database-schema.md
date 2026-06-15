@@ -125,6 +125,9 @@ CREATE TABLE IF NOT EXISTS transactions (
     return_date TIMESTAMP,
     fine_amount DECIMAL(10, 2) DEFAULT 0.00,
     status VARCHAR(20) NOT NULL DEFAULT 'borrowed',
+    override_note TEXT,
+    overridden_at TIMESTAMP,
+    overridden_by INT REFERENCES users(id) ON DELETE SET NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -139,17 +142,23 @@ Field penting:
 - `return_date`: tanggal kembali, null jika belum kembali.
 - `fine_amount`: nominal denda.
 - `status`: status transaksi.
+- `override_note`: catatan admin saat override status transaksi.
+- `overridden_at`: waktu admin melakukan override.
+- `overridden_by`: admin yang melakukan override.
 
 Target status yang disarankan:
 
 - `borrowed`: sedang dipinjam.
 - `returned`: sudah dikembalikan.
 - `overdue`: terlambat.
+- `lost`: buku dilaporkan hilang oleh admin.
+- `damaged`: buku dilaporkan rusak oleh admin.
 
 Status kode aktual:
 
 - Tabel dibuat otomatis.
 - Model, controller, dan route transaksi dasar sudah aktif untuk borrow, return, history, dan stats.
+- Endpoint admin transaksi dan override status sudah aktif.
 - Query borrow/return memakai SQL transaction dan row locking agar update stok atomic.
 
 Index transaksi:

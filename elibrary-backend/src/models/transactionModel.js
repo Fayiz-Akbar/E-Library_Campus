@@ -3,7 +3,9 @@ const { calculateFine } = require('../utils/calculateFine');
 
 const ACTIVE_TRANSACTION_STATUSES = ['borrowed', 'overdue'];
 const DEFAULT_BORROW_DAYS = 7;
-const HISTORY_STATUSES = ['borrowed', 'returned', 'overdue'];
+const HISTORY_STATUSES = ['borrowed', 'returned', 'overdue', 'lost', 'damaged'];
+const ADMIN_TRANSACTION_STATUSES = ['borrowed', 'returned', 'overdue', 'lost', 'damaged'];
+const OVERRIDE_STATUSES = ['returned', 'lost', 'damaged'];
 const DUE_SOON_DAYS = 2;
 
 const parsePositiveInteger = (value) => {
@@ -284,6 +286,17 @@ const buildHistoryStatusFilter = (status) => {
   };
 };
 
+const ensureValidDate = (value, fieldName) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    const error = new Error(`${fieldName} tidak valid.`);
+    error.statusCode = 400;
+    throw error;
+  }
+  return value;
+};
+
 const getUserHistory = async ({ requestedUserId, requester, status }) => {
   const requesterId = parsePositiveInteger(requester.id);
   const targetUserId = parsePositiveInteger(requestedUserId);
@@ -388,6 +401,211 @@ const getUserDueNotifications = async ({ requester }) => {
   });
 };
 
+const getAllTransactions = async ({ filters = {} } = {}) => {
+  const {
+    status,
+    user_id,
+    userId,
+    book_id,
+    bookId,
+    start_date,
+    startDate,
+    end_date,
+    endDate,
+    search,
+  } = filters;
+
+  const clauses = [];
+  const values = [];
+  let paramIndex = 1;
+
+  if (status && status !== 'all') {
+    if (!ADMIN_TRANSACTION_STATUSES.includes(status)) {
+      const error = new Error('Status transaksi tidak valid.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    clauses.push(`(${getDisplayStatusSql()}) = $${paramIndex}`);
+    values.push(status);
+    paramIndex += 1;
+  }
+
+  const filteredUserId = parsePositiveInteger(user_id || userId);
+  if (user_id || userId) {
+    if (!filteredUserId) {
+      const error = new Error('User ID tidak valid.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    clauses.push(`t.user_id = $${paramIndex}`);
+    values.push(filteredUserId);
+    paramIndex += 1;
+  }
+
+  const filteredBookId = parsePositiveInteger(book_id || bookId);
+  if (book_id || bookId) {
+    if (!filteredBookId) {
+      const error = new Error('Book ID tidak valid.');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    clauses.push(`t.book_id = $${paramIndex}`);
+    values.push(filteredBookId);
+    paramIndex += 1;
+  }
+
+  const validStartDate = ensureValidDate(start_date || startDate, 'Tanggal mulai');
+  if (validStartDate) {
+    clauses.push(`t.borrow_date >= $${paramIndex}`);
+    values.push(validStartDate);
+    paramIndex += 1;
+  }
+
+  const validEndDate = ensureValidDate(end_date || endDate, 'Tanggal akhir');
+  if (validEndDate) {
+    clauses.push(`t.borrow_date < ($${paramIndex}::date + INTERVAL '1 day')`);
+    values.push(validEndDate);
+    paramIndex += 1;
+  }
+
+  if (search) {
+    clauses.push(`(u.name ILIKE $${paramIndex} OR u.email ILIKE $${paramIndex} OR b.title ILIKE $${paramIndex})`);
+    values.push(`%${search}%`);
+    paramIndex += 1;
+  }
+
+  const whereClause = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+
+  const result = await db.query(
+    `
+      SELECT
+        t.id,
+        t.user_id,
+        u.name AS user_name,
+        u.email AS user_email,
+        t.book_id,
+        b.title AS book_title,
+        b.author AS book_author,
+        b.cover_image AS book_cover_image,
+        t.borrow_date,
+        t.due_date,
+        t.return_date,
+        t.fine_amount,
+        ${getDisplayStatusSql()} AS status,
+        t.status AS raw_status,
+        t.override_note,
+        t.overridden_at,
+        t.overridden_by,
+        admin.name AS overridden_by_name,
+        t.created_at,
+        t.updated_at
+      FROM transactions t
+      JOIN users u ON u.id = t.user_id
+      JOIN books b ON b.id = t.book_id
+      LEFT JOIN users admin ON admin.id = t.overridden_by
+      ${whereClause}
+      ORDER BY t.borrow_date DESC
+    `,
+    values
+  );
+
+  return result.rows;
+};
+
+const overrideTransactionStatus = async ({ transactionId, adminId, status, note }) => {
+  const parsedTransactionId = parsePositiveInteger(transactionId);
+  const parsedAdminId = parsePositiveInteger(adminId);
+
+  if (!parsedTransactionId) {
+    const error = new Error('Transaction ID tidak valid.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (!OVERRIDE_STATUSES.includes(status)) {
+    const error = new Error('Status override tidak valid.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const client = await db.getClient();
+
+  try {
+    await client.query('BEGIN');
+
+    const transactionResult = await client.query(
+      `
+        SELECT *
+        FROM transactions
+        WHERE id = $1
+        FOR UPDATE
+      `,
+      [parsedTransactionId]
+    );
+    const existingTransaction = transactionResult.rows[0];
+
+    if (!existingTransaction) {
+      const error = new Error('Transaksi tidak ditemukan.');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const shouldRestoreStock = status === 'returned'
+      && !existingTransaction.return_date
+      && ACTIVE_TRANSACTION_STATUSES.includes(existingTransaction.status);
+
+    if (shouldRestoreStock) {
+      await client.query(
+        `
+          UPDATE books
+          SET available_stock = LEAST(stock, available_stock + 1),
+              updated_at = CURRENT_TIMESTAMP
+          WHERE id = $1
+        `,
+        [existingTransaction.book_id]
+      );
+    }
+
+    const returnedAtSql = status === 'returned' ? 'COALESCE(return_date, CURRENT_TIMESTAMP)' : 'return_date';
+    const updatedResult = await client.query(
+      `
+        UPDATE transactions
+        SET status = $1,
+            return_date = ${returnedAtSql},
+            override_note = $2,
+            overridden_at = CURRENT_TIMESTAMP,
+            overridden_by = $3,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $4
+        RETURNING *
+      `,
+      [status, note || null, parsedAdminId, parsedTransactionId]
+    );
+
+    const enriched = await enrichTransactionResult(client, updatedResult.rows[0].id);
+
+    await client.query('COMMIT');
+
+    return {
+      transaction: {
+        ...enriched,
+        override_note: updatedResult.rows[0].override_note,
+        overridden_at: updatedResult.rows[0].overridden_at,
+        overridden_by: updatedResult.rows[0].overridden_by,
+      },
+      stock_restored: shouldRestoreStock,
+    };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+};
+
 const getTransactionStatistics = async () => {
   const result = await db.query(
     `
@@ -411,5 +629,7 @@ module.exports = {
   returnBook,
   getUserHistory,
   getUserDueNotifications,
+  getAllTransactions,
+  overrideTransactionStatus,
   getTransactionStatistics,
 };
