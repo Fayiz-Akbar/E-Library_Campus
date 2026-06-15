@@ -7,6 +7,8 @@ const router = express.Router();
 
 router.post('/borrow', verifyToken, transactionController.borrow);
 router.post('/return', verifyToken, transactionController.returnBorrowedBook);
+router.get('/report', [verifyToken, isAdmin], transactionController.getTransactionReport);
+router.get('/export', [verifyToken, isAdmin], transactionController.exportTransactionReport);
 router.get('/', [verifyToken, isAdmin], transactionController.getAllTransactions);
 router.put('/:id/override', [verifyToken, isAdmin], transactionController.overrideTransaction);
 router.get('/notifications', verifyToken, transactionController.getNotifications);

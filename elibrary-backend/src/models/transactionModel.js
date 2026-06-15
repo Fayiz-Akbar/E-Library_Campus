@@ -297,6 +297,35 @@ const ensureValidDate = (value, fieldName) => {
   return value;
 };
 
+const formatDateOnly = (date) => date.toISOString().slice(0, 10);
+
+const getDefaultReportPeriod = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  return {
+    startDate: formatDateOnly(start),
+    endDate: formatDateOnly(end),
+  };
+};
+
+const normalizeReportPeriod = (filters = {}) => {
+  const defaults = getDefaultReportPeriod();
+  const rawStartDate = filters.start_date || filters.startDate || defaults.startDate;
+  const rawEndDate = filters.end_date || filters.endDate || defaults.endDate;
+  const startDate = ensureValidDate(rawStartDate, 'Tanggal mulai');
+  const endDate = ensureValidDate(rawEndDate, 'Tanggal akhir');
+
+  if (new Date(startDate) > new Date(endDate)) {
+    const error = new Error('Tanggal mulai tidak boleh lebih besar dari tanggal akhir.');
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return { startDate, endDate };
+};
+
 const getUserHistory = async ({ requestedUserId, requester, status }) => {
   const requesterId = parsePositiveInteger(requester.id);
   const targetUserId = parsePositiveInteger(requestedUserId);
@@ -515,6 +544,67 @@ const getAllTransactions = async ({ filters = {} } = {}) => {
   return result.rows;
 };
 
+const getTransactionReport = async ({ filters = {} } = {}) => {
+  const { startDate, endDate } = normalizeReportPeriod(filters);
+
+  const result = await db.query(
+    `
+      SELECT
+        t.id AS transaction_id,
+        t.user_id,
+        u.name AS student_name,
+        u.email AS student_email,
+        t.book_id,
+        b.title AS book_title,
+        b.author AS book_author,
+        t.borrow_date,
+        t.due_date,
+        t.return_date,
+        ${getDisplayStatusSql()} AS status,
+        t.status AS raw_status,
+        COALESCE(t.fine_amount, 0) AS fine_amount
+      FROM transactions t
+      JOIN users u ON u.id = t.user_id
+      JOIN books b ON b.id = t.book_id
+      WHERE t.borrow_date >= $1::date
+        AND t.borrow_date < ($2::date + INTERVAL '1 day')
+      ORDER BY t.borrow_date DESC
+    `,
+    [startDate, endDate]
+  );
+
+  const items = result.rows;
+  const summary = items.reduce((acc, item) => {
+    acc.total_transactions += 1;
+    acc.total_fines += Number(item.fine_amount) || 0;
+
+    if (item.status === 'borrowed') acc.borrowed += 1;
+    if (item.status === 'returned') acc.returned += 1;
+    if (item.status === 'overdue') acc.overdue += 1;
+    if (item.status === 'lost') acc.lost += 1;
+    if (item.status === 'damaged') acc.damaged += 1;
+
+    return acc;
+  }, {
+    total_transactions: 0,
+    borrowed: 0,
+    returned: 0,
+    overdue: 0,
+    lost: 0,
+    damaged: 0,
+    total_fines: 0,
+  });
+
+  return {
+    period: {
+      start_date: startDate,
+      end_date: endDate,
+    },
+    summary,
+    items,
+  };
+};
+
 const overrideTransactionStatus = async ({ transactionId, adminId, status, note }) => {
   const parsedTransactionId = parsePositiveInteger(transactionId);
   const parsedAdminId = parsePositiveInteger(adminId);
@@ -630,6 +720,7 @@ module.exports = {
   getUserHistory,
   getUserDueNotifications,
   getAllTransactions,
+  getTransactionReport,
   overrideTransactionStatus,
   getTransactionStatistics,
 };

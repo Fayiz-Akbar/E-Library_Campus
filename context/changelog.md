@@ -10,6 +10,28 @@ Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
 
 Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
 
+## 2026-06-15 18:07 WIB - Person 3 Report Export
+
+### Added
+
+- Menambahkan endpoint admin `GET /api/transactions/report` untuk preview laporan transaksi per periode.
+- Menambahkan endpoint admin `GET /api/transactions/export` untuk export laporan CSV.
+- Menambahkan util backend `exportReport.js` untuk membangun CSV secara aman.
+- Menambahkan screen admin `ReportScreen` untuk ringkasan laporan, preview transaksi, dan export CSV.
+- Menambahkan tab admin `Laporan`.
+
+### Changed
+
+- Memperluas `transactionApi` mobile dengan `fetchTransactionReport` dan `exportTransactionReportCsv`.
+- Memperluas `useTransactions` dengan hook `useTransactionReport`.
+- Memperbarui dokumentasi progress dan dokumen fitur report-export.
+
+### Notes
+
+- Jika periode kosong, backend memakai default bulan berjalan.
+- Export CSV tetap menghasilkan header walaupun periode tidak memiliki transaksi.
+- Pada web, CSV diunduh via browser; pada Android/iOS tanpa file helper, hasil CSV ditampilkan sebagai preview teks.
+
 ## 2026-06-15 18:00 WIB - Person 3 Admin Transactions
 
 ### Added

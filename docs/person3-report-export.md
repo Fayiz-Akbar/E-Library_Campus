@@ -25,6 +25,16 @@ Backend:
 - Endpoint export laporan.
 - Query agregasi transaksi.
 
+Status implementasi branch saat ini:
+
+- Screen admin `Laporan` sudah tersedia di tab admin.
+- Admin dapat memilih periode laporan.
+- Admin dapat melihat summary dan preview transaksi.
+- Endpoint `GET /api/transactions/report` sudah tersedia dan diproteksi admin middleware.
+- Endpoint `GET /api/transactions/export?format=csv` sudah tersedia dan diproteksi admin middleware.
+- Export CSV tidak menyertakan password atau data sensitif.
+- Pada web, CSV diunduh melalui browser. Pada Android/iOS tanpa file helper, CSV ditampilkan sebagai preview teks.
+
 ## Branch Dependency
 
 Bergantung pada:

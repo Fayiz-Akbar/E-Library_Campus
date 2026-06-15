@@ -207,6 +207,22 @@ Admin opens Transaksi tab
   -> Mobile refreshes transaction list
 ```
 
+## Flow Admin Laporan dan Export
+
+```text
+Admin opens Laporan tab
+  -> Mobile uses current month as default period
+  -> Mobile calls GET /api/transactions/report
+  -> Backend verifies JWT and admin role
+  -> Backend returns summary and transaction items for the period
+  -> Admin changes start_date or end_date
+  -> Admin presses Tampilkan to refresh preview
+  -> Admin presses Export CSV
+  -> Mobile calls GET /api/transactions/export?format=csv
+  -> Backend returns text/csv with safe report columns only
+  -> Web downloads CSV file; native app shows CSV preview text
+```
+
 ## Flow API Connectivity Mobile
 
 Mobile membaca base URL dari:

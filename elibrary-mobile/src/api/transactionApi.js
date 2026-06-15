@@ -58,6 +58,28 @@ export const overrideTransactionStatus = async ({ transactionId, status, note })
   return response.data;
 };
 
+export const fetchTransactionReport = async ({ startDate, endDate } = {}) => {
+  const response = await axiosInstance.get('/transactions/report', {
+    params: {
+      ...(startDate ? { start_date: startDate } : {}),
+      ...(endDate ? { end_date: endDate } : {}),
+    },
+  });
+  return response.data;
+};
+
+export const exportTransactionReportCsv = async ({ startDate, endDate } = {}) => {
+  const response = await axiosInstance.get('/transactions/export', {
+    params: {
+      ...(startDate ? { start_date: startDate } : {}),
+      ...(endDate ? { end_date: endDate } : {}),
+      format: 'csv',
+    },
+    responseType: 'text',
+  });
+  return response.data;
+};
+
 export const processTransactionQr = async ({ mode, qrCode }) => {
   if (mode === TRANSACTION_MODES.RETURN) {
     return returnBookByQr(qrCode);
