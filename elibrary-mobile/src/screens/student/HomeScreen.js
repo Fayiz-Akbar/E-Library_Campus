@@ -12,7 +12,7 @@ const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002
 export default function HomeScreen({ navigation }) {
   const { width } = useWindowDimensions();
   const { user } = useAuth();
-  const { books, loading, error, refreshData } = useHome();
+  const { books, activeLoansCount, loading, error, refreshData } = useHome(); // 🚀 DESTRUCTURING: Ambil activeLoansCount
   const [localSearch, setLocalSearch] = useState(''); 
   const displayName = user?.name?.trim() || 'Pengguna';
   const avatarInitial = displayName.charAt(0).toUpperCase();
@@ -30,12 +30,12 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
-  // 1. KARTU POPULER (BISA DIKLIK MENUJU DETAIL)
+  // 1. KARTU POPULER
   const renderPopularBook = ({ item }) => (
     <TouchableOpacity 
       style={styles.popularCard} 
       activeOpacity={0.8}
-      onPress={() => navigation.navigate('BookDetail', { book: item })} // <=== AKSI KLIK PINDAH KE DETAIL
+      onPress={() => navigation.navigate('BookDetail', { book: item })}
     >
       <View style={styles.imageShadowContainer}>
         <Image
@@ -51,12 +51,12 @@ export default function HomeScreen({ navigation }) {
     </TouchableOpacity>
   );
 
-  // 2. KARTU TERBARU (BISA DIKLIK MENUJU DETAIL)
+  // 2. KARTU TERBARU
   const renderLatestBook = ({ item }) => (
     <TouchableOpacity 
       style={styles.latestCard} 
       activeOpacity={0.7}
-      onPress={() => navigation.navigate('BookDetail', { book: item })} // <=== AKSI KLIK PINDAH KE DETAIL
+      onPress={() => navigation.navigate('BookDetail', { book: item })}
     >
       <Image
         source={{ uri: item.cover_image || PLACEHOLDER_COVER }}
@@ -126,7 +126,7 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
 
-      {/* 2. FLOATING SUMMARY CARD */}
+      {/* 2. FLOATING SUMMARY CARD (🚀 SEKARANG SUDAH DINAMIS) */}
       <View style={[styles.floatingSummaryCard, contentStyle, { width: summaryWidth }]}>
         <View style={styles.summaryLeft}>
           <View style={styles.bookIconContainer}>
@@ -134,11 +134,17 @@ export default function HomeScreen({ navigation }) {
           </View>
           <View style={styles.summaryTexts}>
             <Text style={styles.summaryLabel}>Status Peminjaman</Text>
-            <Text style={styles.summaryStatus}>Kamu bebas dari tunggakan buku</Text>
+            {/* Mengubah sub-deskripsi status mengikuti jumlah peminjaman */}
+            <Text style={styles.summaryStatus}>
+              {activeLoansCount > 0 
+                ? `Kamu memiliki ${activeLoansCount} pinjaman aktif` 
+                : 'Kamu bebas dari tunggakan buku'}
+            </Text>
           </View>
         </View>
         <View style={styles.summaryRight}>
-          <Text style={styles.summaryNumber}>0</Text>
+          {/* Angka diubah mengikuti jumlah dari Supabase */}
+          <Text style={styles.summaryNumber}>{activeLoansCount}</Text>
           <Text style={styles.summaryUnit}>Buku</Text>
         </View>
       </View>

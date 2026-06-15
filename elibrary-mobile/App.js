@@ -1,6 +1,6 @@
 // App.js
 import React from 'react';
-import { StatusBar } from 'react-native';
+import { StatusBar, StyleSheet, View, TouchableOpacity } from 'react-native'; // 🚀 TAMBAHKAN: StyleSheet, View, TouchableOpacity dari react-native
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -47,8 +47,6 @@ function StudentTabs() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Katalog') {
             iconName = focused ? 'library' : 'library-outline';
-          } else if (route.name === 'Scan QR') {
-            iconName = focused ? 'scan' : 'scan-outline';
           } else if (route.name === 'Riwayat') {
             iconName = focused ? 'time' : 'time-outline';
           } else if (route.name === 'Profil') {
@@ -71,7 +69,26 @@ function StudentTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Katalog" component={CatalogScreen} />
-      <Tab.Screen name="Scan QR" component={ScanQRScreen} />
+      
+      {/* 🚀 PERBAIKAN UTAMA: Kustomisasi Tombol Tengah Scan QR Agar Menonjol & Melayang */}
+      <Tab.Screen 
+        name="Scan QR" 
+        component={ScanQRScreen} 
+        options={{
+          tabBarButton: (props) => (
+            <TouchableOpacity
+              onPress={props.onPress}
+              style={styles.customScanWrapper}
+              activeOpacity={0.85}
+            >
+              <View style={styles.customScanCircle}>
+                <Ionicons name="scan" size={26} color="#FFFFFF" />
+              </View>
+            </TouchableOpacity>
+          )
+        }}
+      />
+      
       <Tab.Screen name="Riwayat" component={HistoryScreen} />
       <Tab.Screen name="Profil" component={ProfileScreen} />
     </Tab.Navigator>
@@ -176,3 +193,31 @@ export default function App() {
     </AuthProvider>
   );
 }
+
+// 🚀 TAMBAHKAN: StyleSheet Style Khusus Tombol Melayang
+const styles = StyleSheet.create({
+  customScanWrapper: {
+    top: -18, // Mengangkat tombol ke atas agar memotong border tab bar
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 70,
+    height: 70,
+  },
+  customScanCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.primary, // Warna utama ungu aplikasi
+    justifyContent: 'center',
+    alignItems: 'center',
+    // Efek Shadow & Elevation agar tombol terlihat 3D menonjol ke atas
+    elevation: 8,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    // Garis pembatas putih melingkar luar khas tombol backoffice premium
+    borderWidth: 4,
+    borderColor: '#FFFFFF',
+  },
+});
