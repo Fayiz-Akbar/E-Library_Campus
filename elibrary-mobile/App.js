@@ -7,8 +7,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
 // Context Auth (Person A) — Provider untuk state auth global
-import { AuthProvider } from './src/context/AuthContext';
-import { useAuth } from './src/hooks/useAuth';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 // Auth Screens (Person A)
 import SplashScreen from './src/screens/auth/SplashScreen';
