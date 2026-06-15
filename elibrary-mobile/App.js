@@ -20,6 +20,7 @@ import HomeScreen from './src/screens/student/HomeScreen';
 import CatalogScreen from './src/screens/student/CatalogScreen';
 import BookDetailScreen from './src/screens/student/BookDetailScreen';
 import ProfileScreen from './src/screens/student/ProfileScreen';
+import ScanQRScreen from './src/screens/student/ScanQRScreen';
 
 // Admin Screens
 import ManageBooksScreen from './src/screens/admin/ManageBooksScreen';
@@ -30,7 +31,7 @@ import { colors } from './src/constants/colors';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Tab navigator untuk mahasiswa (Home, Katalog, Profil)
+// Tab navigator untuk mahasiswa (Home, Katalog, Scan QR, Profil)
 function StudentTabs() {
   return (
     <Tab.Navigator
@@ -41,6 +42,8 @@ function StudentTabs() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Katalog') {
             iconName = focused ? 'library' : 'library-outline';
+          } else if (route.name === 'Scan QR') {
+            iconName = focused ? 'scan' : 'scan-outline';
           } else if (route.name === 'Profil') {
             iconName = focused ? 'person-circle' : 'person-circle-outline';
           }
@@ -61,6 +64,7 @@ function StudentTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Katalog" component={CatalogScreen} />
+      <Tab.Screen name="Scan QR" component={ScanQRScreen} />
       <Tab.Screen name="Profil" component={ProfileScreen} />
     </Tab.Navigator>
   );

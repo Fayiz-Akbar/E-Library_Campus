@@ -63,12 +63,16 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 - Onboarding screen.
 - Login screen.
 - Register screen.
-- Student tabs: Home, Katalog, Profil.
+- Student tabs: Home, Katalog, Scan QR, Profil.
 - Admin tabs: Kelola Buku, Kelola Anggota, Profil Admin.
 - Book detail screen.
 - API layer untuk auth, user, book, category, borrow.
+- API layer transaksi untuk borrow/return berbasis QR.
 - Hooks untuk auth, catalog, home, borrow.
+- Hook `useQRScanner` untuk mengelola flow Scan QR.
 - Borrow API sudah mengarah ke `/api/transactions/borrow`.
+- Student tab `Scan QR` aktif dengan kamera perangkat melalui `expo-camera`.
+- Fallback input manual QR/barcode tetap tersedia.
 - Token disimpan melalui AsyncStorage.
 - Role-based navigation di `App.js`.
 
@@ -76,9 +80,6 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 
 Walaupun PRD mencantumkan fitur berikut sebagai target, kode aktual belum menunjukkan implementasi lengkap:
 
-- Backend transaction route.
-- Backend transaction controller/model.
-- Scan QR screen.
 - History screen.
 - Notification screen.
 - Admin manage transactions screen.
@@ -86,7 +87,7 @@ Walaupun PRD mencantumkan fitur berikut sebagai target, kode aktual belum menunj
 - Cron job atau FCM notification.
 - Dashboard admin gabungan statistik semua domain.
 
-Backend transaksi dasar sudah aktif untuk borrow, return, history, dan stats. UI scan QR, riwayat, notifikasi, admin transaksi, laporan, dan dashboard masih perlu dikerjakan pada branch Person 3 berikutnya.
+Backend transaksi dasar sudah aktif untuk borrow, return, history, dan stats. UI Scan QR sudah aktif dengan kamera perangkat dan fallback input manual. Riwayat, notifikasi, admin transaksi, laporan, dan dashboard masih perlu dikerjakan pada branch Person 3 berikutnya.
 
 ## Catatan Bug/Perbaikan Terkini
 
@@ -112,8 +113,7 @@ Perbaikan:
 ## Prioritas Lanjutan yang Disarankan
 
 1. Proteksi mutation kategori dengan admin middleware.
-2. Tambahkan scan QR dan mode pengembalian di mobile.
-3. Tambahkan UI riwayat dan notifikasi transaksi.
-4. Tambahkan admin transaksi, laporan, dan dashboard admin.
-5. Tambahkan validasi input yang lebih kuat.
-6. Tambahkan dokumentasi endpoint API.
+2. Tambahkan UI riwayat dan notifikasi transaksi.
+3. Tambahkan admin transaksi, laporan, dan dashboard admin.
+4. Tambahkan validasi input yang lebih kuat.
+5. Tambahkan dokumentasi endpoint API.
