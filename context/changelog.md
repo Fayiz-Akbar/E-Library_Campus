@@ -1,6 +1,68 @@
 # Changelog
 
-## 2026-06-15 - Responsive UI Flexibility
+## Format Entri
+
+Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
+
+```text
+## YYYY-MM-DD HH:mm WIB - Judul Perubahan
+```
+
+Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
+
+## 2026-06-15 15:15 WIB - Dynamic Home User Name
+
+### Changed
+
+- Mengubah header Home mahasiswa agar menampilkan nama user login dari `AuthContext`, bukan teks hardcode `Fayiz Akbar`.
+- Mengubah initial avatar Home agar mengikuti huruf pertama nama user yang sedang login.
+
+## 2026-06-15 15:01 WIB - Changelog Timestamp Format
+
+### Changed
+
+- Memperbarui format heading changelog agar menampilkan tanggal, jam, dan menit.
+- Menambahkan aturan format entri changelog untuk perubahan berikutnya.
+
+## 2026-06-15 00:00 WIB - Person 3 Transaction Backend
+
+### Added
+
+- Menambahkan route backend transaksi di `elibrary-backend/src/routes/transactionRoutes.js`.
+- Menambahkan controller transaksi di `elibrary-backend/src/controllers/transactionController.js`.
+- Menambahkan model transaksi di `elibrary-backend/src/models/transactionModel.js`.
+- Menambahkan util denda di `elibrary-backend/src/utils/calculateFine.js`.
+- Menambahkan endpoint:
+  - `POST /api/transactions/borrow`
+  - `POST /api/transactions/return`
+  - `GET /api/transactions/history/:user_id`
+  - `GET /api/transactions/stats`
+- Menambahkan helper `getClient()` pada koneksi database agar borrow/return bisa memakai SQL transaction.
+
+### Changed
+
+- Mendaftarkan base route `/api/transactions` di `elibrary-backend/server.js`.
+- Menambahkan index database transaksi untuk query `user_id`, `book_id`, `status`, dan transaksi aktif user-buku.
+- Merapikan urutan route buku agar `/api/books/stats` tidak tertangkap sebagai `/api/books/:id`.
+- Mengubah `elibrary-mobile/src/api/borrowApi.js` agar tombol pinjam memakai endpoint baru `/transactions/borrow`.
+
+### Database
+
+- Tidak menambah tabel baru karena tabel `transactions` sudah tersedia.
+- Menambahkan index:
+  - `idx_transactions_user_id`
+  - `idx_transactions_book_id`
+  - `idx_transactions_status`
+  - `idx_transactions_active_user_book`
+
+### Notes
+
+- Proses pinjam dan kembali dibuat atomic menggunakan `BEGIN`, `COMMIT`, `ROLLBACK`, dan row locking `FOR UPDATE`.
+- Peminjaman mengurangi `books.available_stock`.
+- Pengembalian menambah `books.available_stock` sampai batas maksimum `books.stock`.
+- Denda awal menggunakan aturan Rp1.000 per hari keterlambatan.
+
+## 2026-06-15 00:00 WIB - Responsive UI Flexibility
 
 ### Added
 
@@ -21,7 +83,7 @@
 - Perubahan dibuat agar UI tetap fleksibel di Android, iOS, tablet, dan web.
 - Aturan implementasi baru: hindari `Dimensions.get('window')` di level module untuk layout responsif; gunakan `useWindowDimensions`.
 
-## 2026-06-15 - AI Context Documentation
+## 2026-06-15 00:00 WIB - AI Context Documentation
 
 ### Added
 
@@ -42,7 +104,7 @@
 - `current-progress.md` sengaja membedakan target PRD dengan fitur yang benar-benar terlihat aktif di repository.
 - `ui-design-guidelines.md` mencakup konteks responsif untuk Android, iOS, tablet, dan web.
 
-## 2026-06-15
+## 2026-06-15 00:00 WIB - iOS Expo API Timeout Fix
 
 ### Fixed
 

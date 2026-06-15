@@ -8,12 +8,13 @@ const { isAdmin } = require('../middlewares/adminMiddleware');
 
 // --- RUTE PUBLIC / MAHASISWA ---
 router.get('/', bookController.getAll);
-router.get('/:id', bookController.getById);
 
 // --- RUTE PRIVAT / KHUSUS ADMIN ---
 router.get('/stats', [verifyToken, isAdmin], bookController.getStats);
 router.post('/', [verifyToken, isAdmin], bookController.create);
 router.put('/:id', [verifyToken, isAdmin], bookController.update);
 router.delete('/:id', [verifyToken, isAdmin], bookController.remove);
+
+router.get('/:id', bookController.getById);
 
 module.exports = router;

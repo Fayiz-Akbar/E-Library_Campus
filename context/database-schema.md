@@ -149,7 +149,25 @@ Target status yang disarankan:
 Status kode aktual:
 
 - Tabel dibuat otomatis.
-- Belum ada model/controller/route transaksi aktif.
+- Model, controller, dan route transaksi dasar sudah aktif untuk borrow, return, history, dan stats.
+- Query borrow/return memakai SQL transaction dan row locking agar update stok atomic.
+
+Index transaksi:
+
+```sql
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id
+  ON transactions(user_id);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_book_id
+  ON transactions(book_id);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_status
+  ON transactions(status);
+
+CREATE INDEX IF NOT EXISTS idx_transactions_active_user_book
+  ON transactions(user_id, book_id, status)
+  WHERE status IN ('borrowed', 'overdue');
+```
 
 ## Relasi
 

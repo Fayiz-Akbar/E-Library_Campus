@@ -48,6 +48,12 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 - Book CRUD admin.
 - Book statistics.
 - Generate token/QR data untuk buku.
+- Transaction borrow API.
+- Transaction return API.
+- User transaction history API.
+- Transaction statistics API.
+- Fine calculation utility.
+- Atomic stock update for borrow/return.
 - Seed admin melalui `seed-admin.js`.
 
 ### Mobile
@@ -62,6 +68,7 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 - Book detail screen.
 - API layer untuk auth, user, book, category, borrow.
 - Hooks untuk auth, catalog, home, borrow.
+- Borrow API sudah mengarah ke `/api/transactions/borrow`.
 - Token disimpan melalui AsyncStorage.
 - Role-based navigation di `App.js`.
 
@@ -71,9 +78,6 @@ Walaupun PRD mencantumkan fitur berikut sebagai target, kode aktual belum menunj
 
 - Backend transaction route.
 - Backend transaction controller/model.
-- API peminjaman buku.
-- API pengembalian buku.
-- Hitung denda keterlambatan.
 - Scan QR screen.
 - History screen.
 - Notification screen.
@@ -82,7 +86,7 @@ Walaupun PRD mencantumkan fitur berikut sebagai target, kode aktual belum menunj
 - Cron job atau FCM notification.
 - Dashboard admin gabungan statistik semua domain.
 
-Tabel `transactions` sudah ada di schema, jadi fondasi database untuk transaksi sudah disiapkan.
+Backend transaksi dasar sudah aktif untuk borrow, return, history, dan stats. UI scan QR, riwayat, notifikasi, admin transaksi, laporan, dan dashboard masih perlu dikerjakan pada branch Person 3 berikutnya.
 
 ## Catatan Bug/Perbaikan Terkini
 
@@ -101,17 +105,15 @@ Perbaikan:
 ## Risiko Teknis
 
 - `bookController.create` mengirim `qr_code` ke `bookModel.updateBook`, tetapi model `updateBook` saat ini tidak memasukkan `qr_code` dalam query update. Periksa lagi saat memperbaiki fitur QR buku.
-- Route `GET /api/books/:id` didefinisikan sebelum `GET /api/books/stats`; ini dapat membuat `/stats` tertangkap sebagai `:id`. Pindahkan route `/stats` sebelum `/:id` saat melakukan perbaikan backend.
 - Route kategori `POST`, `PUT`, dan `DELETE` belum diproteksi admin.
 - Nama file `src/app,.js` tidak lazim dan perlu diverifikasi apakah masih dibutuhkan.
 - File PRD memiliki encoding tampilan karakter tree yang rusak di terminal, tetapi isi konseptual masih terbaca.
 
 ## Prioritas Lanjutan yang Disarankan
 
-1. Rapikan route order buku agar `/stats` tidak bentrok dengan `/:id`.
-2. Proteksi mutation kategori dengan admin middleware.
-3. Lengkapi domain transaksi: model, controller, routes, API mobile, screens.
-4. Tambahkan scan QR dan peminjaman/pengembalian.
-5. Tambahkan dashboard admin dan laporan.
-6. Tambahkan validasi input yang lebih kuat.
-7. Tambahkan dokumentasi endpoint API.
+1. Proteksi mutation kategori dengan admin middleware.
+2. Tambahkan scan QR dan mode pengembalian di mobile.
+3. Tambahkan UI riwayat dan notifikasi transaksi.
+4. Tambahkan admin transaksi, laporan, dan dashboard admin.
+5. Tambahkan validasi input yang lebih kuat.
+6. Tambahkan dokumentasi endpoint API.

@@ -61,6 +61,19 @@ const initDatabase = async () => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_user_id
+      ON transactions(user_id);
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_book_id
+      ON transactions(book_id);
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_status
+      ON transactions(status);
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_active_user_book
+      ON transactions(user_id, book_id, status)
+      WHERE status IN ('borrowed', 'overdue');
   `;
 
   try {
@@ -76,5 +89,6 @@ const initDatabase = async () => {
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
+  getClient: () => pool.connect(),
   initDatabase,
 };
