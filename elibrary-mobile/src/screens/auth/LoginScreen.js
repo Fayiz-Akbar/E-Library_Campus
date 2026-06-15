@@ -11,18 +11,22 @@ import {
   Platform,
   ScrollView,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { useAuth } from '../../hooks/useAuth';
+import { getResponsiveContentStyle } from '../../utils/responsive';
 
 export default function LoginScreen({ navigation }) {
+  const { width } = useWindowDimensions();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
+  const formContentStyle = getResponsiveContentStyle(width, 520);
 
   const handleLogin = async () => {
     // Validasi input di sisi client
@@ -57,7 +61,7 @@ export default function LoginScreen({ navigation }) {
       <View style={styles.headerDecor}>
         <View style={styles.circle1} />
         <View style={styles.circle2} />
-        <View style={styles.headerContent}>
+        <View style={[styles.headerContent, formContentStyle]}>
           <View style={styles.logoIcon}>
             <Ionicons name="library" size={28} color="#FFFFFF" />
           </View>
@@ -71,7 +75,7 @@ export default function LoginScreen({ navigation }) {
       <ScrollView
         style={styles.formContainer}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.formContent}
+        contentContainerStyle={[styles.formContent, formContentStyle]}
       >
         {/* Input Email */}
         <Text style={styles.inputLabel}>Alamat Email</Text>

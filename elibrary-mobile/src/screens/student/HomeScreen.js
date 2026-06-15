@@ -1,15 +1,23 @@
 // src/screens/student/HomeScreen.js
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, ScrollView, FlatList, Image, TouchableOpacity, ActivityIndicator, TextInput } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, FlatList, Image, TouchableOpacity, ActivityIndicator, TextInput, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; 
 import { colors } from '../../constants/colors';
 import { useHome } from '../../hooks/useHome';
+import { getContentMaxWidth, getHorizontalPadding, getResponsiveContentStyle } from '../../utils/responsive';
 
 const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';
 
 export default function HomeScreen({ navigation }) {
+  const { width } = useWindowDimensions();
   const { books, loading, error, refreshData } = useHome();
   const [localSearch, setLocalSearch] = useState(''); 
+  const contentMaxWidth = getContentMaxWidth(width, 980);
+  const contentStyle = getResponsiveContentStyle(width, 980);
+  const horizontalPadding = getHorizontalPadding(width);
+  const summaryWidth = typeof contentMaxWidth === 'number'
+    ? Math.min(width - horizontalPadding * 2, contentMaxWidth)
+    : width - horizontalPadding * 2;
 
   const handleSearchSubmit = () => {
     if (localSearch.trim() !== '') {
@@ -77,7 +85,7 @@ export default function HomeScreen({ navigation }) {
         <View style={styles.circleBg1} />
         <View style={styles.circleBg2} />
         
-        <View style={styles.headerTopRow}>
+        <View style={[styles.headerTopRow, contentStyle]}>
           <View style={styles.profileTexts}>
             <Text style={styles.welcomeText}>Selamat Datang 👋</Text>
             <Text style={styles.usernameText}>Fayiz Akbar</Text>
@@ -96,7 +104,7 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* INPUT PENCARIAN AKTIF */}
-        <View style={styles.searchBarReal}>
+        <View style={[styles.searchBarReal, contentStyle]}>
           <Ionicons name="search" size={18} color={colors.textSecondary} style={{ marginRight: 10 }} />
           <TextInput
             style={styles.searchInput}
@@ -111,7 +119,7 @@ export default function HomeScreen({ navigation }) {
       </View>
 
       {/* 2. FLOATING SUMMARY CARD */}
-      <View style={styles.floatingSummaryCard}>
+      <View style={[styles.floatingSummaryCard, contentStyle, { width: summaryWidth }]}>
         <View style={styles.summaryLeft}>
           <View style={styles.bookIconContainer}>
             <Ionicons name="bookmark" size={22} color={colors.textOnPrimary} />
@@ -139,7 +147,7 @@ export default function HomeScreen({ navigation }) {
       ) : (
         <>
           {/* 3. REKOMENDASI POPULER */}
-          <View style={styles.sectionArea}>
+          <View style={[styles.sectionArea, contentStyle]}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Rekomendasi Populer</Text>
               <TouchableOpacity onPress={() => navigation.navigate('Katalog')}>
@@ -152,12 +160,12 @@ export default function HomeScreen({ navigation }) {
               keyExtractor={(item) => 'pop-' + item.id.toString()}
               horizontal
               showsHorizontalScrollIndicator={false}
-              contentContainerStyle={styles.horizontalScrollPadding}
+              contentContainerStyle={[styles.horizontalScrollPadding, { paddingLeft: horizontalPadding, paddingRight: horizontalPadding }]}
             />
           </View>
 
           {/* 4. KOLEKSI TERBARU */}
-          <View style={[styles.sectionArea, { marginBottom: 40 }]}>
+          <View style={[styles.sectionArea, contentStyle, { marginBottom: 40 }]}>
             <View style={styles.sectionHeaderRow}>
               <Text style={styles.sectionTitle}>Koleksi Buku Terbaru</Text>
               <Ionicons name="flash" size={16} color={colors.warning} />
@@ -167,7 +175,7 @@ export default function HomeScreen({ navigation }) {
               renderItem={renderLatestBook}
               keyExtractor={(item) => 'lat-' + item.id.toString()}
               scrollEnabled={false} 
-              contentContainerStyle={styles.verticalListPadding}
+              contentContainerStyle={[styles.verticalListPadding, { paddingHorizontal: horizontalPadding }]}
             />
           </View>
         </>
@@ -192,7 +200,7 @@ const styles = StyleSheet.create({
   avatarText: { fontSize: 16, fontWeight: 'bold', color: colors.primary },
   searchBarReal: { flexDirection: 'row', backgroundColor: '#FFFFFF', paddingHorizontal: 16, borderRadius: 14, alignItems: 'center', height: 46 },
   searchInput: { flex: 1, fontSize: 13, color: colors.textPrimary, height: '100%' },
-  floatingSummaryCard: { backgroundColor: '#FFFFFF', marginHorizontal: 24, borderRadius: 18, padding: 16, marginTop: -40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 6, shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
+  floatingSummaryCard: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 16, marginTop: -40, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', elevation: 6, shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.1, shadowRadius: 8 },
   summaryLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   bookIconContainer: { backgroundColor: colors.primary, padding: 10, borderRadius: 12 },
   summaryTexts: { marginLeft: 12, flex: 1 },
@@ -205,14 +213,14 @@ const styles = StyleSheet.create({
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginHorizontal: 24, marginBottom: 12 },
   sectionTitle: { fontSize: 15, fontWeight: 'bold', color: colors.textPrimary },
   viewAllText: { fontSize: 12, fontWeight: 'bold', color: colors.primary },
-  horizontalScrollPadding: { paddingLeft: 24, paddingRight: 10 },
+  horizontalScrollPadding: { paddingRight: 10 },
   popularCard: { width: 130, marginRight: 14 },
   imageShadowContainer: { borderRadius: 14, backgroundColor: '#E5E7EB', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.1, shadowRadius: 4 },
   popularImage: { width: 130, height: 175, borderRadius: 14 },
   popularInfo: { marginTop: 6 },
   bookTitle: { fontSize: 13, fontWeight: 'bold', color: colors.textPrimary },
   bookAuthor: { fontSize: 11, color: colors.textSecondary, marginTop: 1 },
-  verticalListPadding: { paddingHorizontal: 24 },
+  verticalListPadding: {},
   latestCard: { flexDirection: 'row', backgroundColor: '#FFFFFF', marginBottom: 10, padding: 10, borderRadius: 14, alignItems: 'center', elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.02, shadowRadius: 2 },
   latestImage: { width: 50, height: 68, borderRadius: 10, backgroundColor: colors.surface },
   latestDetails: { flex: 1, marginLeft: 14 },

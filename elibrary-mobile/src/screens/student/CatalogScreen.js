@@ -1,12 +1,16 @@
 // src/screens/student/CatalogScreen.js
 import React, { useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, FlatList, Image, TouchableOpacity, ActivityIndicator, Dimensions } from 'react-native';
+import { StyleSheet, Text, View, TextInput, FlatList, Image, TouchableOpacity, ActivityIndicator, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { useCatalog } from '../../hooks/useCatalog';
-
-const { width } = Dimensions.get('window');
-const CARD_WIDTH = (width - 56) / 2; 
+import {
+  getCatalogColumns,
+  getContentMaxWidth,
+  getGridItemWidth,
+  getHorizontalPadding,
+  getResponsiveContentStyle,
+} from '../../utils/responsive';
 
 const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';
 
@@ -19,6 +23,21 @@ const getCategoryIcon = (name) => {
 };
 
 export default function CatalogScreen({ route, navigation }) {
+  const { width } = useWindowDimensions();
+  const contentMaxWidth = getContentMaxWidth(width, 1180);
+  const horizontalPadding = getHorizontalPadding(width);
+  const gridGap = width >= 768 ? 18 : 12;
+  const columns = getCatalogColumns(width);
+  const cardWidth = getGridItemWidth({
+    width,
+    columns,
+    horizontalPadding,
+    gap: gridGap,
+    maxWidth: contentMaxWidth,
+  });
+  const coverHeight = Math.min(240, Math.max(160, cardWidth * 1.42));
+  const contentStyle = getResponsiveContentStyle(width, 1180);
+
   const {
     books,
     categories,
@@ -51,8 +70,12 @@ export default function CatalogScreen({ route, navigation }) {
   };
 
   const renderBookGridItem = ({ item }) => (
-    <TouchableOpacity style={styles.bookGridCard} activeOpacity={0.95} onPress={() => navigation.navigate('BookDetail', { book: item })}>
-      <View style={styles.coverWrapper}>
+    <TouchableOpacity
+      style={[styles.bookGridCard, { width: cardWidth }]}
+      activeOpacity={0.95}
+      onPress={() => navigation.navigate('BookDetail', { book: item })}
+    >
+      <View style={[styles.coverWrapper, { height: coverHeight }]}>
         <Image source={{ uri: item.cover_image || PLACEHOLDER_COVER }} style={styles.coverImage} resizeMode="cover" />
         <View style={[styles.floatingBadge, item.available_stock > 0 ? styles.bgSuccess : styles.bgDanger]}>
           <Text style={item.available_stock > 0 ? styles.textSuccess : styles.textDanger}>
@@ -72,7 +95,7 @@ export default function CatalogScreen({ route, navigation }) {
   );
 
   const ListHeaderBanner = () => (
-    <View style={styles.bannerContainer}>
+    <View style={[styles.bannerContainer, contentStyle]}>
       <View style={styles.bannerCircleDecor} />
       <View style={styles.bannerTextSection}>
         <View style={styles.badgePromo}>
@@ -91,33 +114,35 @@ export default function CatalogScreen({ route, navigation }) {
       <View style={styles.headerSection}>
         <View style={styles.circleBg1} />
         <View style={styles.circleBg2} />
-        <Text style={styles.subTitleLabel}>KATALOG DIGITAL</Text>
-        <Text style={styles.mainLargeTitle}>Jelajahi Koleksi</Text>
-        <View style={styles.searchContainerGlow}>
-          <Ionicons name="search-outline" size={18} color={colors.primary} style={{ marginRight: 10 }} />
-          <TextInput
-            style={styles.textInputField}
-            placeholder="Cari judul buku, penulis, atau ISBN..."
-            placeholderTextColor="#94A3B8"
-            value={search}
-            onChangeText={(text) => setSearch(text)}
-            clearButtonMode="while-editing"
-          />
-          {search.length > 0 && (
-            <TouchableOpacity onPress={() => setSearch('')}>
-              <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
-            </TouchableOpacity>
-          )}
-        </View>
-        <View style={styles.categoriesWrapper}>
-          <FlatList
-            data={categories}
-            renderItem={renderCategoryItem}
-            keyExtractor={(item) => 'premium-cat-' + item.id.toString()}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.categoryScrollPadding}
-          />
+        <View style={contentStyle}>
+          <Text style={styles.subTitleLabel}>KATALOG DIGITAL</Text>
+          <Text style={styles.mainLargeTitle}>Jelajahi Koleksi</Text>
+          <View style={styles.searchContainerGlow}>
+            <Ionicons name="search-outline" size={18} color={colors.primary} style={{ marginRight: 10 }} />
+            <TextInput
+              style={styles.textInputField}
+              placeholder="Cari judul buku, penulis, atau ISBN..."
+              placeholderTextColor="#94A3B8"
+              value={search}
+              onChangeText={(text) => setSearch(text)}
+              clearButtonMode="while-editing"
+            />
+            {search.length > 0 && (
+              <TouchableOpacity onPress={() => setSearch('')}>
+                <Ionicons name="close-circle" size={18} color={colors.textSecondary} />
+              </TouchableOpacity>
+            )}
+          </View>
+          <View style={styles.categoriesWrapper}>
+            <FlatList
+              data={categories}
+              renderItem={renderCategoryItem}
+              keyExtractor={(item) => 'premium-cat-' + item.id.toString()}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryScrollPadding}
+            />
+          </View>
         </View>
       </View>
 
@@ -138,15 +163,19 @@ export default function CatalogScreen({ route, navigation }) {
           </View>
         ) : (
           <FlatList
-            key={2}
+            key={`catalog-${columns}`}
             data={books}
             renderItem={renderBookGridItem}
             keyExtractor={(item) => 'premium-grid-' + item.id.toString()}
-            numColumns={2}
+            numColumns={columns}
             showsVerticalScrollIndicator={false}
-            columnWrapperStyle={styles.gridRowSpacing}
+            columnWrapperStyle={[styles.gridRowSpacing, { gap: gridGap }]}
             ListHeaderComponent={ListHeaderBanner}
-            contentContainerStyle={styles.gridContainerPadding}
+            contentContainerStyle={[
+              styles.gridContainerPadding,
+              contentStyle,
+              { paddingHorizontal: horizontalPadding },
+            ]}
             onRefresh={refreshCatalog}
             refreshing={loading}
           />
@@ -182,10 +211,10 @@ const styles = StyleSheet.create({
   bannerSubTitle: { fontSize: 11, color: '#E9D5FF', marginTop: 4, lineHeight: 15 },
   bannerIconDecor: { position: 'absolute', right: 12, bottom: -10 },
   gridSection: { flex: 1 },
-  gridContainerPadding: { paddingHorizontal: 20, paddingBottom: 30 },
-  gridRowSpacing: { justifyContent: 'space-between' },
-  bookGridCard: { width: CARD_WIDTH, marginBottom: 20, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 8, borderWidth: 1, borderColor: '#EAE6FA', elevation: 4, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 6 },
-  coverWrapper: { width: '100%', height: 215, borderRadius: 16, overflow: 'hidden', position: 'relative', backgroundColor: '#F1F5F9' },
+  gridContainerPadding: { paddingBottom: 30 },
+  gridRowSpacing: { justifyContent: 'flex-start' },
+  bookGridCard: { marginBottom: 20, backgroundColor: '#FFFFFF', borderRadius: 20, padding: 8, borderWidth: 1, borderColor: '#EAE6FA', elevation: 4, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.04, shadowRadius: 6 },
+  coverWrapper: { width: '100%', borderRadius: 16, overflow: 'hidden', position: 'relative', backgroundColor: '#F1F5F9' },
   coverImage: { width: '100%', height: '100%' },
   floatingBadge: { position: 'absolute', bottom: 8, left: 8, paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
   bgSuccess: { backgroundColor: 'rgba(240, 253, 244, 0.95)', borderWidth: 1, borderColor: '#DCFCE7' },

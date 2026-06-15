@@ -1,16 +1,20 @@
 // src/screens/student/BookDetailScreen.js
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, Dimensions, StatusBar, ActivityIndicator, Alert } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, StatusBar, ActivityIndicator, Alert, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { useBorrow } from '../../hooks/useBorrow';
+import { getResponsiveContentStyle } from '../../utils/responsive';
 
-const { width } = Dimensions.get('window');
 const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';
 
 export default function BookDetailScreen({ route, navigation }) {
+  const { width } = useWindowDimensions();
   const { book } = route.params;
   const { borrowLoading, borrowError, handleBorrowSubmit } = useBorrow();
+  const contentStyle = getResponsiveContentStyle(width, 760);
+  const coverWidth = Math.min(320, Math.max(190, width * 0.42));
+  const coverHeight = coverWidth * 1.38;
   
   const isAvailable = book.available_stock > 0;
 
@@ -47,8 +51,9 @@ export default function BookDetailScreen({ route, navigation }) {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollPadding}>
+        <View style={[styles.detailContent, contentStyle]}>
         <View style={styles.coverSection}>
-          <View style={styles.imageShadowBox}>
+          <View style={[styles.imageShadowBox, { width: coverWidth, height: coverHeight }]}>
             <Image source={{ uri: book.cover_image || PLACEHOLDER_COVER }} style={styles.mainCoverImage} resizeMode="cover" />
           </View>
         </View>
@@ -99,11 +104,12 @@ export default function BookDetailScreen({ route, navigation }) {
             {book.summary || 'Tidak ada sinopsis atau ringkasan deskripsi yang tersedia untuk katalog buku ini, Bree.'}
           </Text>
         </View>
+        </View>
       </ScrollView>
 
       <View style={styles.bottomActionBar}>
         <TouchableOpacity 
-          style={[styles.primaryActionBtn, (!isAvailable || borrowLoading) && styles.disabledActionBtn]} 
+          style={[styles.primaryActionBtn, contentStyle, (!isAvailable || borrowLoading) && styles.disabledActionBtn]} 
           disabled={!isAvailable || borrowLoading}
           onPress={onBorrowPress}
           activeOpacity={0.8}
@@ -130,8 +136,9 @@ const styles = StyleSheet.create({
   backButton: { backgroundColor: '#F8FAFC', padding: 10, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0' },
   navbarTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary, flex: 1, textAlign: 'center', marginLeft: 22 },
   scrollPadding: { paddingBottom: 120 },
+  detailContent: { alignSelf: 'center' },
   coverSection: { alignItems: 'center', marginTop: 24, marginBottom: 20 },
-  imageShadowBox: { width: width * 0.52, height: width * 0.72, borderRadius: 24, backgroundColor: '#F1F5F9', elevation: 12, shadowColor: colors.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 14 },
+  imageShadowBox: { borderRadius: 24, backgroundColor: '#F1F5F9', elevation: 12, shadowColor: colors.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 14 },
   mainCoverImage: { width: '100%', height: '100%', borderRadius: 24 },
   infoSection: { alignItems: 'center', paddingHorizontal: 24, marginTop: 8 },
   bookAuthor: { fontSize: 11, fontWeight: '800', color: colors.primary, letterSpacing: 1.5 },

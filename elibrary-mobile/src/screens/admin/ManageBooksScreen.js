@@ -1,16 +1,18 @@
 // src/screens/admin/ManageBooksScreen.js
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity, ActivityIndicator, Modal, TextInput, ScrollView, Alert, KeyboardAvoidingView, Platform, Animated } from 'react-native';
+import { StyleSheet, Text, View, FlatList, Image, TouchableOpacity, ActivityIndicator, Modal, TextInput, ScrollView, Alert, KeyboardAvoidingView, Platform, Animated, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker'; 
 import { colors } from '../../constants/colors';
 import { fetchAllBooks } from '../../api/bookApi';
 import { adminCreateBook, adminUpdateBook, adminDeleteBook } from '../../api/bookApi';
+import { getResponsiveContentStyle } from '../../utils/responsive';
 import axiosInstance from '../../api/axiosInstance'; // 🚀 REVISI UTAMA: Ikut jalur resmi axios yang sudah terbukti berhasil
 
 const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';
 
 export default function ManageBooksScreen() {
+  const { width } = useWindowDimensions();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]); 
@@ -30,6 +32,7 @@ export default function ManageBooksScreen() {
     category_id: null, title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: ''
   });
   const [submitLoading, setSubmitLoading] = useState(false);
+  const contentStyle = getResponsiveContentStyle(width, 1080);
 
   const loadAdminCatalog = async () => {
     try {
@@ -279,7 +282,7 @@ export default function ManageBooksScreen() {
         <View style={styles.headerCircle2} />
         <View style={styles.headerCircle3} />
 
-        <View style={styles.headerTopRow}>
+        <View style={[styles.headerTopRow, contentStyle]}>
           <View style={styles.headerIconBadge}>
             <Ionicons name="library" size={20} color="#FFFFFF" />
           </View>
@@ -290,7 +293,7 @@ export default function ManageBooksScreen() {
         </View>
 
         {/* Search bar di dalam header */}
-        <View style={styles.headerSearchBar}>
+        <View style={[styles.headerSearchBar, contentStyle]}>
           <Ionicons name="search" size={16} color={colors.textSecondary} style={{ marginRight: 10 }} />
           <TextInput
             style={styles.headerSearchInput}
@@ -309,7 +312,7 @@ export default function ManageBooksScreen() {
       </View>
 
       {/* ===== STATS SUMMARY CARDS ===== */}
-      <View style={styles.statsRow}>
+      <View style={[styles.statsRow, contentStyle]}>
         <View style={styles.statCard}>
           <View style={[styles.statIconWrap, { backgroundColor: '#F3EEFF' }]}>  
             <Ionicons name="book" size={18} color={colors.primary} />
@@ -336,7 +339,7 @@ export default function ManageBooksScreen() {
       </View>
 
       {/* ===== LIST SECTION HEADER ===== */}
-      <View style={styles.sectionHeaderRow}>
+      <View style={[styles.sectionHeaderRow, contentStyle]}>
         <Text style={styles.sectionTitle}>
           {searchQuery.trim() ? `Hasil: ${filteredBooks.length} buku` : 'Daftar Inventaris Buku'}
         </Text>
@@ -360,7 +363,7 @@ export default function ManageBooksScreen() {
           renderItem={renderAdminBookRow}
           keyExtractor={(item) => 'admin-book-' + item.id.toString()}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContainerPadding}
+          contentContainerStyle={[styles.listContainerPadding, contentStyle]}
           onRefresh={loadAdminCatalog}
           refreshing={loading}
           ListEmptyComponent={renderEmptyState}

@@ -9,12 +9,15 @@ import {
   ActivityIndicator,
   TextInput,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { fetchAllUsers, toggleUserStatus, fetchUserStats } from '../../api/userApi';
+import { getResponsiveContentStyle } from '../../utils/responsive';
 
 export default function ManageUsersScreen() {
+  const { width } = useWindowDimensions();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -23,6 +26,7 @@ export default function ManageUsersScreen() {
     active_users: 0,
     suspended_users: 0,
   });
+  const contentStyle = getResponsiveContentStyle(width, 980);
 
   const loadUsers = async () => {
     try {
@@ -182,7 +186,7 @@ export default function ManageUsersScreen() {
         <View style={styles.headerCircle2} />
         <View style={styles.headerCircle3} />
 
-        <View style={styles.headerTopRow}>
+        <View style={[styles.headerTopRow, contentStyle]}>
           <View style={styles.headerIconBadge}>
             <Ionicons name="people" size={20} color="#FFFFFF" />
           </View>
@@ -193,7 +197,7 @@ export default function ManageUsersScreen() {
         </View>
 
         {/* Search Bar */}
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, contentStyle]}>
           <Ionicons name="search" size={16} color={colors.textSecondary} style={{ marginRight: 10 }} />
           <TextInput
             style={styles.searchInput}
@@ -212,7 +216,7 @@ export default function ManageUsersScreen() {
       </View>
 
       {/* Stats */}
-      <View style={styles.statsRow}>
+      <View style={[styles.statsRow, contentStyle]}>
         <View style={styles.statCard}>
           <View style={[styles.statIconWrap, { backgroundColor: '#F3EEFF' }]}>
             <Ionicons name="people" size={18} color={colors.primary} />
@@ -239,7 +243,7 @@ export default function ManageUsersScreen() {
       </View>
 
       {/* Section Header */}
-      <View style={styles.sectionHeaderRow}>
+      <View style={[styles.sectionHeaderRow, contentStyle]}>
         <Text style={styles.sectionTitle}>
           {searchQuery.trim() ? `Hasil: ${users.length} anggota` : 'Daftar Anggota'}
         </Text>
@@ -262,7 +266,7 @@ export default function ManageUsersScreen() {
           renderItem={renderUserRow}
           keyExtractor={(item) => 'user-' + item.id.toString()}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listPadding}
+          contentContainerStyle={[styles.listPadding, contentStyle]}
           onRefresh={() => { loadUsers(); loadStats(); }}
           refreshing={loading}
           ListEmptyComponent={renderEmptyState}

@@ -6,13 +6,12 @@ import {
   Text,
   FlatList,
   TouchableOpacity,
-  Dimensions,
   Animated,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
+import { getResponsiveContentStyle } from '../../utils/responsive';
 
 const ONBOARDING_DATA = [
   {
@@ -39,9 +38,11 @@ const ONBOARDING_DATA = [
 ];
 
 export default function OnboardingScreen({ navigation }) {
+  const { width } = useWindowDimensions();
   const [currentIndex, setCurrentIndex] = useState(0);
   const flatListRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
+  const contentStyle = getResponsiveContentStyle(width, 620);
 
   const handleNext = () => {
     if (currentIndex < ONBOARDING_DATA.length - 1) {
@@ -64,9 +65,9 @@ export default function OnboardingScreen({ navigation }) {
 
   const renderSlide = ({ item, index }) => {
     const inputRange = [
-      (index - 1) * SCREEN_WIDTH,
-      index * SCREEN_WIDTH,
-      (index + 1) * SCREEN_WIDTH,
+      (index - 1) * width,
+      index * width,
+      (index + 1) * width,
     ];
 
     const iconScale = scrollX.interpolate({
@@ -76,14 +77,16 @@ export default function OnboardingScreen({ navigation }) {
     });
 
     return (
-      <View style={styles.slide}>
+      <View style={[styles.slide, { width }]}>
         <Animated.View
           style={[styles.iconCircle, { transform: [{ scale: iconScale }] }]}
         >
           <Ionicons name={item.icon} size={64} color={colors.primary} />
         </Animated.View>
-        <Text style={styles.slideTitle}>{item.title}</Text>
-        <Text style={styles.slideDescription}>{item.description}</Text>
+        <View style={contentStyle}>
+          <Text style={styles.slideTitle}>{item.title}</Text>
+          <Text style={styles.slideDescription}>{item.description}</Text>
+        </View>
       </View>
     );
   };
@@ -133,7 +136,7 @@ export default function OnboardingScreen({ navigation }) {
       </View>
 
       {/* Tombol aksi */}
-      <View style={styles.bottomSection}>
+      <View style={[styles.bottomSection, contentStyle]}>
         <TouchableOpacity
           style={styles.nextButton}
           onPress={handleNext}
@@ -175,7 +178,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   slide: {
-    width: SCREEN_WIDTH,
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

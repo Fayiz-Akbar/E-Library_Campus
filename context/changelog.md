@@ -1,5 +1,26 @@
 # Changelog
 
+## 2026-06-15 - Responsive UI Flexibility
+
+### Added
+
+- Menambahkan helper responsif `elibrary-mobile/src/utils/responsive.js`.
+- Menambahkan aturan responsif yang lebih eksplisit di `context/ui-design-guidelines.md`.
+
+### Changed
+
+- Katalog buku kini memakai `useWindowDimensions` untuk menyesuaikan jumlah kolom di mobile, tablet, dan web.
+- Detail buku kini membatasi ukuran cover dan action button agar tidak membesar berlebihan di desktop.
+- Home screen kini memakai constrained content width untuk search, summary card, section, dan list.
+- Login dan Register kini memakai max width agar form tidak melebar penuh di web.
+- Onboarding kini membaca ukuran viewport secara dinamis, bukan `Dimensions.get('window')` statis.
+- Profile, Manage Users, dan Manage Books kini memakai constrained content width untuk tampilan web.
+
+### Notes
+
+- Perubahan dibuat agar UI tetap fleksibel di Android, iOS, tablet, dan web.
+- Aturan implementasi baru: hindari `Dimensions.get('window')` di level module untuk layout responsif; gunakan `useWindowDimensions`.
+
 ## 2026-06-15 - AI Context Documentation
 
 ### Added
