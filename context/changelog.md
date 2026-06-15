@@ -10,6 +10,17 @@ Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
 
 Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
 
+## 2026-06-15 15:26 WIB - Fix Web Refresh Session Logout
+
+### Fixed
+
+- Memperbaiki bug web refresh yang membuat user selalu diarahkan ke Onboarding/Login walaupun token masih tersimpan.
+- Mengubah `SplashScreen` agar membaca `isLoadingSession`, `isLoggedIn`, dan `isAdmin` langsung dari `AuthContext`, bukan dari `route.params`.
+
+### Documentation
+
+- Menambahkan dokumentasi perbaikan di `docs/learn and fix bug/web-refresh-session-logout.md`.
+
 ## 2026-06-15 15:15 WIB - Dynamic Home User Name
 
 ### Changed
