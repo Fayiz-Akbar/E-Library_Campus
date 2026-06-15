@@ -6,16 +6,29 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
+// Auth Screens (Person A)
+import SplashScreen from './src/screens/auth/SplashScreen';
+import OnboardingScreen from './src/screens/auth/OnboardingScreen';
+import LoginScreen from './src/screens/auth/LoginScreen';
+import RegisterScreen from './src/screens/auth/RegisterScreen';
+
+// Student Screens
 import HomeScreen from './src/screens/student/HomeScreen';
 import CatalogScreen from './src/screens/student/CatalogScreen';
 import BookDetailScreen from './src/screens/student/BookDetailScreen';
-import ManageBooksScreen from './src/screens/admin/ManageBooksScreen'; 
+import ProfileScreen from './src/screens/student/ProfileScreen';
+
+// Admin Screens
+import ManageBooksScreen from './src/screens/admin/ManageBooksScreen';
+import ManageUsersScreen from './src/screens/admin/ManageUsersScreen';
+
 import { colors } from './src/constants/colors';
+import { useAuth } from './src/hooks/useAuth';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// 1. GABUNGAN MENU TAB BAWAH USER (TETAP BIARKAN DI SINI)
+// Tab navigator untuk mahasiswa (Home, Katalog, Profil)
 function StudentTabs() {
   return (
     <Tab.Navigator
@@ -26,6 +39,8 @@ function StudentTabs() {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'Katalog') {
             iconName = focused ? 'library' : 'library-outline';
+          } else if (route.name === 'Profil') {
+            iconName = focused ? 'person-circle' : 'person-circle-outline';
           }
           return <Ionicons name={iconName} size={size} color={color} />;
         },
@@ -44,23 +59,80 @@ function StudentTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Katalog" component={CatalogScreen} />
+      <Tab.Screen name="Profil" component={ProfileScreen} />
     </Tab.Navigator>
   );
 }
 
-// 2. ROOT NAVIGATION UTAMA 
+// Tab navigator untuk admin (Kelola Buku, Kelola Anggota, Profil)
+function AdminTabs() {
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          if (route.name === 'Kelola Buku') {
+            iconName = focused ? 'library' : 'library-outline';
+          } else if (route.name === 'Kelola Anggota') {
+            iconName = focused ? 'people' : 'people-outline';
+          } else if (route.name === 'Profil Admin') {
+            iconName = focused ? 'person-circle' : 'person-circle-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: '#FFFFFF',
+          borderTopWidth: 1,
+          borderTopColor: '#F4F1FE',
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 60,
+        },
+        headerShown: false,
+      })}
+    >
+      <Tab.Screen name="Kelola Buku" component={ManageBooksScreen} />
+      <Tab.Screen name="Kelola Anggota" component={ManageUsersScreen} />
+      <Tab.Screen name="Profil Admin" component={ProfileScreen} />
+    </Tab.Navigator>
+  );
+}
+
+// Root navigator — mengelola flow autentikasi dan peralihan role
+function RootNavigator() {
+  const { isLoggedIn, isAdmin, loading } = useAuth();
+
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {/* Splash selalu ditampilkan pertama, menerima status auth via params */}
+      <Stack.Screen
+        name="Splash"
+        component={SplashScreen}
+        initialParams={{ isLoggedIn, isAdmin }}
+      />
+
+      {/* Flow Autentikasi */}
+      <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+      <Stack.Screen name="Login" component={LoginScreen} />
+      <Stack.Screen name="Register" component={RegisterScreen} />
+
+      {/* Flow Mahasiswa */}
+      <Stack.Screen name="MainTabs" component={StudentTabs} />
+      <Stack.Screen name="BookDetail" component={BookDetailScreen} />
+
+      {/* Flow Admin */}
+      <Stack.Screen name="AdminTabs" component={AdminTabs} />
+    </Stack.Navigator>
+  );
+}
+
 export default function App() {
   return (
     <NavigationContainer>
       <StatusBar barStyle="light-content" translucent={true} backgroundColor="transparent" />
-      
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="AdminManageBooks" component={ManageBooksScreen} />
-
-        {/* Susunan halaman user diturunkan sementara ke bawahnya */}
-        <Stack.Screen name="MainTabs" component={StudentTabs} />
-        <Stack.Screen name="BookDetail" component={BookDetailScreen} />
-      </Stack.Navigator>
+      <RootNavigator />
     </NavigationContainer>
   );
 }
