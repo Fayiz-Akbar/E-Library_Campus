@@ -10,6 +10,28 @@ Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
 
 Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
 
+## 2026-06-15 18:00 WIB - Person 3 Admin Transactions
+
+### Added
+
+- Menambahkan endpoint admin `GET /api/transactions` untuk melihat semua transaksi.
+- Menambahkan endpoint admin `PUT /api/transactions/:id/override` untuk override status transaksi.
+- Menambahkan screen admin `ManageTransactionsScreen` untuk monitoring transaksi.
+- Menambahkan tab admin `Transaksi`.
+- Menambahkan filter admin transaksi berdasarkan status, search, dan periode tanggal.
+- Menambahkan kolom database `override_note`, `overridden_at`, dan `overridden_by` pada tabel `transactions`.
+
+### Changed
+
+- Memperluas `transactionApi` mobile dengan `fetchAdminTransactions` dan `overrideTransactionStatus`.
+- Memperluas `useTransactions` dengan hook `useAdminTransactions`.
+- Memperbarui dokumentasi progress, schema database, dan dokumen fitur admin transactions.
+
+### Notes
+
+- Override `lost` dan `damaged` tidak menambah stok buku.
+- Override `returned` akan mengembalikan stok jika transaksi sebelumnya masih aktif dan belum punya `return_date`.
+
 ## 2026-06-15 16:12 WIB - Person 3 History Notification
 
 ### Added

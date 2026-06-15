@@ -53,6 +53,8 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 - User transaction history API.
 - User transaction history filter by status.
 - User due date notification API.
+- Admin all transactions API.
+- Admin transaction override API.
 - Transaction statistics API.
 - Fine calculation utility.
 - Atomic stock update for borrow/return.
@@ -66,7 +68,7 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 - Login screen.
 - Register screen.
 - Student tabs: Home, Katalog, Scan QR, Riwayat, Profil.
-- Admin tabs: Kelola Buku, Kelola Anggota, Profil Admin.
+- Admin tabs: Kelola Buku, Kelola Anggota, Transaksi, Profil Admin.
 - Book detail screen.
 - API layer untuk auth, user, book, category, borrow.
 - API layer transaksi untuk borrow/return berbasis QR.
@@ -76,6 +78,7 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 - Student tab `Scan QR` aktif dengan kamera perangkat melalui `expo-camera`.
 - Student tab `Riwayat` aktif dengan filter Semua, Dipinjam, Dikembalikan, dan Terlambat.
 - Screen `Notification` aktif untuk reminder jatuh tempo dan keterlambatan.
+- Admin tab `Transaksi` aktif untuk list, filter, search, detail, dan override status transaksi.
 - Fallback input manual QR/barcode tetap tersedia.
 - Token disimpan melalui AsyncStorage.
 - Role-based navigation di `App.js`.
@@ -84,12 +87,11 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 
 Walaupun PRD mencantumkan fitur berikut sebagai target, kode aktual belum menunjukkan implementasi lengkap:
 
-- Admin manage transactions screen.
 - Admin report/export screen.
 - Cron job atau FCM notification.
 - Dashboard admin gabungan statistik semua domain.
 
-Backend transaksi dasar sudah aktif untuk borrow, return, history, notifications, dan stats. UI Scan QR, Riwayat, dan Notifikasi mahasiswa sudah aktif. Admin transaksi, laporan, dan dashboard masih perlu dikerjakan pada branch Person 3 berikutnya.
+Backend transaksi dasar sudah aktif untuk borrow, return, history, notifications, admin transactions, override, dan stats. UI Scan QR, Riwayat, Notifikasi mahasiswa, dan Admin Transaksi sudah aktif. Laporan dan dashboard masih perlu dikerjakan pada branch Person 3 berikutnya.
 
 ## Catatan Bug/Perbaikan Terkini
 
@@ -115,6 +117,6 @@ Perbaikan:
 ## Prioritas Lanjutan yang Disarankan
 
 1. Proteksi mutation kategori dengan admin middleware.
-2. Tambahkan admin transaksi, laporan, dan dashboard admin.
+2. Tambahkan laporan dan dashboard admin.
 3. Tambahkan validasi input yang lebih kuat.
 4. Tambahkan dokumentasi endpoint API.

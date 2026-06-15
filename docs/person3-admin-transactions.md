@@ -25,6 +25,17 @@ Backend:
 - Endpoint filter transaksi.
 - Endpoint override status.
 
+Status implementasi branch saat ini:
+
+- Screen admin `Transaksi` sudah tersedia di tab admin.
+- Admin dapat melihat semua transaksi.
+- Admin dapat filter berdasarkan status, search, dan periode tanggal.
+- Admin dapat melihat detail transaksi.
+- Admin dapat override status ke `lost`, `damaged`, atau `returned`.
+- Endpoint `GET /api/transactions` sudah tersedia dan diproteksi admin middleware.
+- Endpoint `PUT /api/transactions/:id/override` sudah tersedia dan diproteksi admin middleware.
+- Tabel `transactions` menyimpan `override_note`, `overridden_at`, dan `overridden_by`.
+
 ## Branch Dependency
 
 Bergantung pada:
