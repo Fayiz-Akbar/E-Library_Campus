@@ -1,7 +1,9 @@
 // src/hooks/useTransactions.js
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
+  exportTransactionReportCsv,
   fetchAdminTransactions,
+  fetchTransactionReport,
   fetchTransactionHistory,
   fetchTransactionNotifications,
   overrideTransactionStatus,
@@ -211,5 +213,88 @@ export const useAdminTransactions = ({ autoLoad = true } = {}) => {
     handleStatusChange,
     loadAdminTransactions,
     submitOverride,
+  };
+};
+
+const getCurrentMonthDateRange = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const formatDate = (date) => date.toISOString().slice(0, 10);
+
+  return {
+    startDate: formatDate(start),
+    endDate: formatDate(end),
+  };
+};
+
+export const useTransactionReport = ({ autoLoad = true } = {}) => {
+  const defaultRange = useMemo(() => getCurrentMonthDateRange(), []);
+  const [startDate, setStartDate] = useState(defaultRange.startDate);
+  const [endDate, setEndDate] = useState(defaultRange.endDate);
+  const [summary, setSummary] = useState({
+    total_transactions: 0,
+    borrowed: 0,
+    returned: 0,
+    overdue: 0,
+    lost: 0,
+    damaged: 0,
+    total_fines: 0,
+  });
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [error, setError] = useState('');
+  const [csvText, setCsvText] = useState('');
+
+  const loadReport = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError('');
+      const response = await fetchTransactionReport({ startDate, endDate });
+      setSummary(response.data?.summary || {});
+      setItems(Array.isArray(response.data?.items) ? response.data.items : []);
+    } catch (reportError) {
+      setError(getApiErrorMessage(reportError, 'Gagal memuat laporan transaksi.'));
+    } finally {
+      setLoading(false);
+    }
+  }, [endDate, startDate]);
+
+  const exportCsv = useCallback(async () => {
+    try {
+      setExporting(true);
+      setError('');
+      const csv = await exportTransactionReportCsv({ startDate, endDate });
+      setCsvText(csv || '');
+      return { success: true, data: csv || '' };
+    } catch (exportError) {
+      const message = getApiErrorMessage(exportError, 'Gagal export laporan transaksi.');
+      setError(message);
+      return { success: false, message };
+    } finally {
+      setExporting(false);
+    }
+  }, [endDate, startDate]);
+
+  useEffect(() => {
+    if (autoLoad) {
+      loadReport();
+    }
+  }, [autoLoad, loadReport]);
+
+  return {
+    startDate,
+    endDate,
+    summary,
+    items,
+    loading,
+    exporting,
+    error,
+    csvText,
+    setStartDate,
+    setEndDate,
+    loadReport,
+    exportCsv,
   };
 };
