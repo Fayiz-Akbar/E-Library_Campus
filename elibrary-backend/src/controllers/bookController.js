@@ -1,6 +1,7 @@
 // src/controllers/bookController.js
 const bookModel = require('../models/bookModel');
-const { generateBookQR } = require('../utils/generateQRCode'); // <=== Import utilitas generator QR Code kita
+const db = require('../config/db'); // 🚀 TAMBAHKAN: Import db pool langsung untuk cek transaksi relasi
+const { generateBookQR } = require('../utils/generateQRCode'); 
 
 // GET /api/books (Mendukung /api/books?search=...&category=...)
 const getAll = async (req, res) => {
@@ -68,12 +69,11 @@ const getById = async (req, res) => {
   }
 };
 
-// POST /api/books (Mendukung Penerbitan QR Code Otomatis)
+// POST /api/books
 const create = async (req, res) => {
   try {
     const { category_id, title, author, publisher, isbn, summary, cover_image, stock } = req.body;
     
-    // Validasi input data krusial
     if (!title || !author || !stock) {
       return res.status(400).json({
         success: false,
@@ -81,7 +81,6 @@ const create = async (req, res) => {
       });
     }
 
-    // 1. Simpan data buku awal ke database
     const newBook = await bookModel.createBook({
       category_id: category_id || null,
       title,
@@ -91,13 +90,11 @@ const create = async (req, res) => {
       summary,
       cover_image,
       stock: parseInt(stock) || 1,
-      available_stock: parseInt(stock) || 1 // Pastikan saat insert awal juga terisi
+      available_stock: parseInt(stock) || 1
     });
 
-    // 2. Buat data QR Code Base64 memanfaatkan ID buku yang baru terbentuk
     const qrCodeData = await generateBookQR(newBook.id);
 
-    // 3. FIX UTAMA: Sertakan available_stock agar tidak kena not-null constraint PostgreSQL
     const finalBook = await bookModel.updateBook(newBook.id, {
       category_id: category_id || null,
       title: title,
@@ -107,7 +104,7 @@ const create = async (req, res) => {
       summary: summary || '',
       cover_image: cover_image || '',
       stock: parseInt(stock) || 1,
-      available_stock: parseInt(stock) || 1, // <=== KUNCI PERBAIKAN DI SINI BREE
+      available_stock: parseInt(stock) || 1, 
       qr_code: qrCodeData 
     });
 
@@ -131,7 +128,6 @@ const update = async (req, res) => {
     const { id } = req.params;
     const { category_id, title, author, publisher, isbn, summary, cover_image, stock, available_stock } = req.body;
 
-    // Cek apakah buku tersebut eksis terlebih dahulu
     const existingBook = await bookModel.getBookById(id);
     if (!existingBook) {
       return res.status(404).json({
@@ -166,27 +162,47 @@ const update = async (req, res) => {
 };
 
 // DELETE /api/books/:id
+// 🚀 PERBAIKAN UTAMA: Sistem Proteksi Integrity Constraint Sebelum Menghapus Buku
 const remove = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // 1. CEK LOGIKA BISNIS: Apakah ada mahasiswa yang saat ini sedang meminjam buku ini?
+    const activeTxCheck = await db.query(
+      `SELECT id FROM transactions WHERE book_id = $1 AND status IN ('borrowed', 'overdue') LIMIT 1`,
+      [id]
+    );
+
+    if (activeTxCheck.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Gagal menghapus! Buku ini tidak boleh dimusnahkan karena sedang aktif dipinjam oleh mahasiswa.',
+      });
+    }
+
+    // 2. CEK RELASI RIWAYAT: Bersihkan data riwayat transaksi lama yang sudah berstatus 'returned'/'lost'/'damaged'
+    // Tindakan ini mencegah terjadinya eror 'foreign_key_violation' (Error 23503) dari PostgreSQL Supabase
+    await db.query(`DELETE FROM transactions WHERE book_id = $1`, [id]);
+
+    // 3. Eksekusi fungsi hapus utama dari model
     const deletedBook = await bookModel.deleteBook(id);
 
     if (!deletedBook) {
       return res.status(404).json({
         success: false,
-        message: 'Buku tidak ditemukan atau sudah dihapus',
+        message: 'Buku tidak ditemukan atau sudah pernah dihapus sebelumnya.',
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: 'Buku berhasil dihapus dari sistem',
+      message: 'Buku berhasil dimusnahkan secara permanen dari pangkalan data sistem.',
       data: deletedBook,
     });
   } catch (error) {
     return res.status(500).json({
       success: false,
-      message: 'Gagal menghapus data buku: ' + error.message,
+      message: 'Gagal menghapus data buku dari server: ' + error.message,
     });
   }
 };
