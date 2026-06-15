@@ -21,6 +21,8 @@ import CatalogScreen from './src/screens/student/CatalogScreen';
 import BookDetailScreen from './src/screens/student/BookDetailScreen';
 import ProfileScreen from './src/screens/student/ProfileScreen';
 import ScanQRScreen from './src/screens/student/ScanQRScreen';
+import HistoryScreen from './src/screens/student/HistoryScreen';
+import NotificationScreen from './src/screens/student/NotificationScreen';
 
 // Admin Screens
 import ManageBooksScreen from './src/screens/admin/ManageBooksScreen';
@@ -31,7 +33,7 @@ import { colors } from './src/constants/colors';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-// Tab navigator untuk mahasiswa (Home, Katalog, Scan QR, Profil)
+// Tab navigator untuk mahasiswa (Home, Katalog, Scan QR, Riwayat, Profil)
 function StudentTabs() {
   return (
     <Tab.Navigator
@@ -44,6 +46,8 @@ function StudentTabs() {
             iconName = focused ? 'library' : 'library-outline';
           } else if (route.name === 'Scan QR') {
             iconName = focused ? 'scan' : 'scan-outline';
+          } else if (route.name === 'Riwayat') {
+            iconName = focused ? 'time' : 'time-outline';
           } else if (route.name === 'Profil') {
             iconName = focused ? 'person-circle' : 'person-circle-outline';
           }
@@ -65,6 +69,7 @@ function StudentTabs() {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Katalog" component={CatalogScreen} />
       <Tab.Screen name="Scan QR" component={ScanQRScreen} />
+      <Tab.Screen name="Riwayat" component={HistoryScreen} />
       <Tab.Screen name="Profil" component={ProfileScreen} />
     </Tab.Navigator>
   );
@@ -137,6 +142,7 @@ function RootNavigator() {
       {/* Flow Mahasiswa */}
       <Stack.Screen name="MainTabs" component={StudentTabs} />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} />
+      <Stack.Screen name="Notification" component={NotificationScreen} />
 
       {/* Flow Admin */}
       <Stack.Screen name="AdminTabs" component={AdminTabs} />

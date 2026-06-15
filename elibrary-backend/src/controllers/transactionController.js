@@ -66,6 +66,7 @@ const getHistory = async (req, res) => {
     const history = await transactionModel.getUserHistory({
       requestedUserId: req.params.user_id,
       requester: req.user,
+      status: req.query.status,
     });
 
     return res.status(200).json({
@@ -75,6 +76,22 @@ const getHistory = async (req, res) => {
     });
   } catch (error) {
     return sendError(res, error, 'Gagal mengambil riwayat peminjaman.');
+  }
+};
+
+const getNotifications = async (req, res) => {
+  try {
+    const notifications = await transactionModel.getUserDueNotifications({
+      requester: req.user,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Berhasil mengambil notifikasi jatuh tempo.',
+      data: notifications,
+    });
+  } catch (error) {
+    return sendError(res, error, 'Gagal mengambil notifikasi jatuh tempo.');
   }
 };
 
@@ -101,5 +118,6 @@ module.exports = {
   borrow,
   returnBorrowedBook,
   getHistory,
+  getNotifications,
   getStats,
 };

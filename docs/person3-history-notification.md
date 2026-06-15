@@ -25,6 +25,15 @@ Backend:
 - Query transaksi dengan join ke data buku.
 - Data notifikasi jatuh tempo.
 
+Status implementasi branch saat ini:
+
+- Screen `Riwayat` sudah tersedia sebagai tab mahasiswa.
+- Screen `Notification` sudah tersedia dari tombol notifikasi di halaman Riwayat.
+- Filter riwayat `Semua`, `Dipinjam`, `Dikembalikan`, dan `Terlambat` sudah aktif.
+- Endpoint `GET /api/transactions/history/:user_id` sudah mendukung query `status`.
+- Endpoint `GET /api/transactions/notifications` sudah tersedia.
+- Notifikasi menampilkan transaksi aktif yang terlambat atau akan jatuh tempo dalam 2 hari.
+
 ## Branch Dependency
 
 Bergantung pada:

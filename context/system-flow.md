@@ -138,7 +138,7 @@ PUT /api/users/:id/role
 
 ## Target Flow Peminjaman QR
 
-Belum lengkap di kode aktual, tetapi target PRD:
+Flow aktual:
 
 ```text
 Student opens Scan QR
@@ -154,7 +154,7 @@ Student opens Scan QR
 
 ## Target Flow Pengembalian QR
 
-Belum lengkap di kode aktual, tetapi target PRD:
+Flow aktual:
 
 ```text
 Student/Admin scans book QR
@@ -165,6 +165,30 @@ Student/Admin scans book QR
   -> Backend updates status returned
   -> Backend increments available_stock
   -> Mobile shows return result and fine
+```
+
+## Flow Riwayat Peminjaman
+
+```text
+Student opens Riwayat
+  -> Mobile reads user id from AuthContext
+  -> Mobile calls GET /api/transactions/history/:user_id
+  -> Optional filter: status=borrowed|returned|overdue
+  -> Backend verifies JWT
+  -> Backend rejects student accessing another user's history
+  -> Backend returns transactions joined with books
+  -> Mobile displays status, dates, and fine
+```
+
+## Flow Notifikasi Jatuh Tempo
+
+```text
+Student opens Notifikasi from Riwayat
+  -> Mobile calls GET /api/transactions/notifications
+  -> Backend verifies JWT
+  -> Backend loads active borrowed/overdue transactions
+  -> Backend returns books overdue or due within 2 days
+  -> Mobile displays reminder and scan return shortcut
 ```
 
 ## Flow API Connectivity Mobile
