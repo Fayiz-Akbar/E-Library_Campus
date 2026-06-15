@@ -4,14 +4,18 @@ import { StyleSheet, Text, View, ScrollView, FlatList, Image, TouchableOpacity, 
 import { Ionicons } from '@expo/vector-icons'; 
 import { colors } from '../../constants/colors';
 import { useHome } from '../../hooks/useHome';
+import { useAuth } from '../../hooks/useAuth';
 import { getContentMaxWidth, getHorizontalPadding, getResponsiveContentStyle } from '../../utils/responsive';
 
 const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';
 
 export default function HomeScreen({ navigation }) {
   const { width } = useWindowDimensions();
+  const { user } = useAuth();
   const { books, loading, error, refreshData } = useHome();
   const [localSearch, setLocalSearch] = useState(''); 
+  const displayName = user?.name?.trim() || 'Pengguna';
+  const avatarInitial = displayName.charAt(0).toUpperCase();
   const contentMaxWidth = getContentMaxWidth(width, 980);
   const contentStyle = getResponsiveContentStyle(width, 980);
   const horizontalPadding = getHorizontalPadding(width);
@@ -88,7 +92,7 @@ export default function HomeScreen({ navigation }) {
         <View style={[styles.headerTopRow, contentStyle]}>
           <View style={styles.profileTexts}>
             <Text style={styles.welcomeText}>Selamat Datang 👋</Text>
-            <Text style={styles.usernameText}>Fayiz Akbar</Text>
+            <Text style={styles.usernameText} numberOfLines={1}>{displayName}</Text>
           </View>
 
           <View style={styles.rightActionsGroup}>
@@ -98,7 +102,7 @@ export default function HomeScreen({ navigation }) {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.avatarPlaceholder} activeOpacity={0.8}>
-              <Text style={styles.avatarText}>F</Text>
+              <Text style={styles.avatarText}>{avatarInitial}</Text>
             </TouchableOpacity>
           </View>
         </View>
