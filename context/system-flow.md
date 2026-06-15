@@ -223,6 +223,20 @@ Admin opens Laporan tab
   -> Web downloads CSV file; native app shows CSV preview text
 ```
 
+## Flow Dashboard Admin
+
+```text
+Admin opens Dashboard tab
+  -> Mobile calls GET /api/dashboard/admin
+  -> Backend verifies JWT and admin role
+  -> Backend loads user statistics from user model
+  -> Backend loads book statistics from book model
+  -> Backend loads transaction statistics from transaction model
+  -> Backend returns aggregated dashboard data
+  -> Mobile renders responsive statistic cards
+  -> Admin uses shortcuts to open Anggota, Buku, Transaksi, or Laporan tab
+```
+
 ## Flow API Connectivity Mobile
 
 Mobile membaca base URL dari:
