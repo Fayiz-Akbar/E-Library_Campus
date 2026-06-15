@@ -17,6 +17,12 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 // Jalankan inisialisasi tabel database
 initDatabase();
 
+// Request Logger
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
 // Registrasi Base Route API
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
