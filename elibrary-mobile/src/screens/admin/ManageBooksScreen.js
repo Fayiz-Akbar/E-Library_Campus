@@ -28,7 +28,7 @@ export default function ManageBooksScreen() {
   const [qrModalVisible, setQrModalVisible] = useState(false);
   const [activeQrData, setActiveQrData] = useState({ title: '', qr_code: '' });
 
-  // 🚀 STATE BARU: Khusus Tambah Kategori Cepat (Inline Category Creator)
+  // State: Khusus Tambah Kategori Cepat (Inline Category Creator)
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categorySubmitLoading, setCategorySubmitLoading] = useState(false);
@@ -39,13 +39,22 @@ export default function ManageBooksScreen() {
   const [submitLoading, setSubmitLoading] = useState(false);
   const contentStyle = getResponsiveContentStyle(width, 1080);
 
+  // Helper untuk memunculkan Alert yang aman di Web maupun Mobile
+  const showAlert = (title, message) => {
+    if (Platform.OS === 'web') {
+      window.alert(`${title}: ${message}`);
+    } else {
+      Alert.alert(title, message);
+    }
+  };
+
   const loadAdminCatalog = async () => {
     try {
       setLoading(true);
       const res = await fetchAllBooks('', ''); 
       if (res.success) setBooks(res.data);
     } catch (err) {
-      Alert.alert('Error ❌', 'Gagal menyinkronkan data katalog perpustakaan.');
+      showAlert('Error ❌', 'Gagal menyinkronkan data katalog perpustakaan.');
     } finally {
       setLoading(false);
     }
@@ -74,36 +83,31 @@ export default function ManageBooksScreen() {
     loadCategoriesFromBackend();
   }, []);
 
-  // 🚀 FUNGSI BARU: Menembak API untuk membuat kategori baru secara langsung
   const handleCreateCategory = async () => {
     if (!newCategoryName.trim()) {
-      Alert.alert('Peringatan ⚠️', 'Nama kategori baru tidak boleh kosong, Bree!');
+      showAlert('Peringatan ⚠️', 'Nama kategori baru tidak boleh kosong, Bree!');
       return;
     }
 
     try {
       setCategorySubmitLoading(true);
-      // Hitung rute POST /categories bawaan Express kelompokmu
       const res = await axiosInstance.post('/categories', { name: newCategoryName.trim() });
       
       if (res.data && res.data.success) {
-        Alert.alert('Sukses 🎉', `Kategori "${newCategoryName}" berhasil ditambahkan.`);
-        
-        // Refresh daftar data kategori lokal
+        showAlert('Sukses 🎉', `Kategori "${newCategoryName}" berhasil ditambahkan.`);
         await loadCategoriesFromBackend();
         
-        // Auto-select kategori yang baru dibuat ke form buku yang sedang aktif dibuka
         const createdCategory = res.data.data;
         if (createdCategory && createdCategory.id) {
           setForm((prevForm) => ({ ...prevForm, category_id: createdCategory.id }));
         }
 
         setNewCategoryName('');
-        setCategoryModalVisible(false); // Tutup sub-modal kategori
+        setCategoryModalVisible(false);
       }
     } catch (err) {
-      const errMsg = err.response?.data?.message || 'Gagal menyimpan kategori baru ke database cloud.';
-      Alert.alert('Gagal Simpan ❌', errMsg);
+      const errMsg = err.response?.data?.message || 'Gagal menyimpan kategori baru.';
+      showAlert('Gagal Simpan ❌', errMsg);
     } finally {
       setCategorySubmitLoading(false);
     }
@@ -113,7 +117,7 @@ export default function ManageBooksScreen() {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     
     if (permissionResult.granted === false) {
-      Alert.alert('Izin Ditolak ⚠️', 'Aplikasi butuh akses galeri untuk mengunggah gambar sampul, Bree!');
+      showAlert('Izin Ditolak ⚠️', 'Aplikasi butuh akses galeri untuk mengunggah gambar sampul, Bree!');
       return;
     }
 
@@ -132,7 +136,7 @@ export default function ManageBooksScreen() {
 
   const openQrModal = (book) => {
     if (!book.qr_code) {
-      Alert.alert('Peringatan ⚠️', 'Buku lama ini belum memiliki data QR Code Token, silakan edit lalu simpan ulang terlebih dahulu.');
+      showAlert('Peringatan ⚠️', 'Buku lama ini belum memiliki data QR Code Token, silakan edit lalu simpan ulang terlebih dahulu.');
       return;
     }
     setActiveQrData({ title: book.title, qr_code: book.qr_code });
@@ -168,7 +172,7 @@ export default function ManageBooksScreen() {
 
   const handleSaveBook = async () => {
     if (!form.title || !form.author || !form.stock) {
-      Alert.alert('Peringatan ⚠️', 'Judul, Penulis, dan Jumlah Stok wajib diisi, Bree!');
+      showAlert('Peringatan ⚠️', 'Judul, Penulis, dan Jumlah Stok wajib diisi, Bree!');
       return;
     }
 
@@ -182,43 +186,56 @@ export default function ManageBooksScreen() {
       }
 
       if (res.success) {
-        Alert.alert('Sukses 🎉', res.message);
+        showAlert('Sukses 🎉', res.message);
         setModalVisible(false);
         loadAdminCatalog(); 
       }
     } catch (err) {
-      Alert.alert('Gagal ❌', err.message || 'Terjadi kesalahan sistem internal.');
+      showAlert('Gagal ❌', err.message || 'Terjadi kesalahan sistem internal.');
     } finally {
       setSubmitLoading(false);
     }
   };
 
+  // 🚀 REVISI UTAMA: Fungsi Hapus Lintas Platform (Tahan Banting di Browser Laptop)
   const handleDeleteConfirm = (book) => {
-    Alert.alert(
-      'Konfirmasi Pemusnahan',
-      `Apakah kamu yakin ingin menghapus buku "${book.title}" secara permanen dari sistem database?`,
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Ya, Hapus',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              const res = await adminDeleteBook(book.id);
-              if (res.success) {
-                Alert.alert('Terhapus 🗑️', res.message || 'Buku berhasil dimusnahkan.');
-                loadAdminCatalog(); 
-              } else {
-                Alert.alert('Gagal ⚠️', res.message || 'Gagal menghapus buku.');
-              }
-            } catch (err) {
-              const serverMessage = err.response?.data?.message || 'Gagal menghapus buku dari server. Periksa hak akses Admin Anda.';
-              Alert.alert('Error Hapus ❌', serverMessage);
-            }
-          }
+    const executeDelete = async () => {
+      try {
+        const res = await adminDeleteBook(book.id);
+        if (res.success) {
+          showAlert('Terhapus 🗑️', res.message || 'Buku berhasil dimusnahkan.');
+          loadAdminCatalog(); 
+        } else {
+          showAlert('Gagal ⚠️', res.message || 'Gagal menghapus buku.');
         }
-      ]
-    );
+      } catch (err) {
+        const serverMessage = err.response?.data?.message || 'Gagal menghapus buku dari server. Periksa hak akses Admin Anda.';
+        showAlert('Error Hapus ❌', serverMessage);
+      }
+    };
+
+    // 💡 JALUR WEB BROWSER LAPTOP
+    if (Platform.OS === 'web') {
+      const confirmWeb = window.confirm(`Apakah kamu yakin ingin menghapus buku "${book.title}" secara permanen dari sistem database, Bree?`);
+      if (confirmWeb) {
+        executeDelete();
+      }
+    } 
+    // 💡 JALUR MOBILE HP / EMULATOR
+    else {
+      Alert.alert(
+        'Konfirmasi Pemusnahan',
+        `Apakah kamu yakin ingin menghapus buku "${book.title}" secara permanen dari sistem database?`,
+        [
+          { text: 'Batal', style: 'cancel' },
+          {
+            text: 'Ya, Hapus',
+            style: 'destructive',
+            onPress: executeDelete,
+          }
+        ]
+      );
+    }
   };
 
   const selectedCategoryName = categories.find(c => c.id === form.category_id)?.name || 'Pilih Kategori Klasifikasi...';
@@ -282,14 +299,6 @@ export default function ManageBooksScreen() {
     </View>
   );
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyStateContainer}>
-      <View style={styles.emptyIconCircle}><Ionicons name="library-outline" size={48} color={colors.primaryLight} /></View>
-      <Text style={styles.emptyTitle}>{searchQuery.trim() ? 'Buku Tidak Ditemukan' : 'Rak Buku Masih Kosong'}</Text>
-      <Text style={styles.emptySubtitle}>{searchQuery.trim() ? `Tidak ada buku yang cocok dengan "${searchQuery}"` : 'Belum ada buku yang terdaftar dalam sistem.\nTekan tombol + untuk menambah buku baru.'}</Text>
-    </View>
-  );
-
   return (
     <View style={styles.container}>
       {/* ===== HEADER ===== */}
@@ -342,7 +351,7 @@ export default function ManageBooksScreen() {
           <Text style={styles.loadingText}>Menyelaraskan rak buku admin...</Text>
         </View>
       ) : (
-        <FlatList data={filteredBooks} renderItem={renderAdminBookRow} keyExtractor={(item) => 'admin-book-' + item.id.toString()} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.listContainerPadding, contentStyle]} onRefresh={loadAdminCatalog} refreshing={loading} ListEmptyComponent={renderEmptyState} />
+        <FlatList data={filteredBooks} renderItem={renderAdminBookRow} keyExtractor={(item) => 'admin-book-' + item.id.toString()} showsVerticalScrollIndicator={false} contentContainerStyle={[styles.listContainerPadding, contentStyle]} onRefresh={loadAdminCatalog} refreshing={loading} ListEmptyComponent={loadAdminCatalog} />
       )}
 
       <TouchableOpacity style={styles.floatingAddBtn} activeOpacity={0.85} onPress={openAddModal}>
@@ -350,7 +359,7 @@ export default function ManageBooksScreen() {
         <Text style={styles.fabLabel}>Tambah</Text>
       </TouchableOpacity>
 
-      {/* ===== MODAL FORM INPUT POPUP (BUKU) ===== */}
+      {/* ===== MODAL FORM INPUT BUKU ===== */}
       <Modal animationType="slide" transparent={true} visible={modalVisible} onRequestClose={() => setModalVisible(false)}>
         <View style={styles.modalBlurOverlay}>
           <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalFormWrapper}>
@@ -372,14 +381,9 @@ export default function ManageBooksScreen() {
                 <Text style={styles.formSectionText}>Informasi Klasifikasi</Text>
               </View>
 
-              {/* 🚀 PERBAIKAN: Header label kategori + tombol aksi Tambah Cepat Inline */}
               <View style={styles.labelCategoryRow}>
                 <Text style={styles.inputLabel}>Kategori Klasifikasi Buku</Text>
-                <TouchableOpacity 
-                  style={styles.inlineAddCategoryBtn} 
-                  activeOpacity={0.7} 
-                  onPress={() => setCategoryModalVisible(true)}
-                >
+                <TouchableOpacity style={styles.inlineAddCategoryBtn} activeOpacity={0.7} onPress={() => setCategoryModalVisible(true)}>
                   <Ionicons name="add-circle-outline" size={13} color={colors.primary} />
                   <Text style={styles.inlineAddCategoryText}>+ Kategori Baru</Text>
                 </TouchableOpacity>
@@ -512,7 +516,7 @@ export default function ManageBooksScreen() {
         </View>
       </Modal>
 
-      {/* 🚀 SUB-MODAL BARU: Pop-up input untuk mendaftarkan kategori klasifikasi baru */}
+      {/* ===== SUB-MODAL TAMBAH KATEGORI ===== */}
       <Modal animationType="fade" transparent={true} visible={categoryModalVisible} onRequestClose={() => setCategoryModalVisible(false)}>
         <View style={styles.subModalOverlay}>
           <View style={styles.categoryMiniBox}>
@@ -524,21 +528,10 @@ export default function ManageBooksScreen() {
               <TouchableOpacity onPress={() => setCategoryModalVisible(false)}><Ionicons name="close" size={18} color={colors.textSecondary} /></TouchableOpacity>
             </View>
             <Text style={styles.miniInputDesc}>Masukkan nama rumpun ilmu atau klasifikasi rak buku baru:</Text>
-            <TextInput 
-              style={styles.miniTextInputBox} 
-              placeholder="Contoh: Kecerdasan Buatan, Jaringan, Novel..." 
-              placeholderTextColor="#94A3B8"
-              value={newCategoryName}
-              onChangeText={setNewCategoryName}
-              autoFocus={true}
-            />
+            <TextInput style={styles.miniTextInputBox} placeholder="Contoh: Kecerdasan Buatan, Jaringan, Novel..." placeholderTextColor="#94A3B8" value={newCategoryName} onChangeText={setNewCategoryName} autoFocus={true} />
             <View style={styles.miniBoxActions}>
               <TouchableOpacity style={styles.miniCancelBtn} onPress={() => setCategoryModalVisible(false)}><Text style={styles.miniCancelText}>Batal</Text></TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.miniSubmitBtn, categorySubmitLoading && { backgroundColor: '#CBD5E1' }]} 
-                disabled={categorySubmitLoading} 
-                onPress={handleCreateCategory}
-              >
+              <TouchableOpacity style={[styles.miniSubmitBtn, categorySubmitLoading && { backgroundColor: '#CBD5E1' }]} disabled={categorySubmitLoading} onPress={handleCreateCategory}>
                 {categorySubmitLoading ? <ActivityIndicator size="small" color="#FFFFFF" /> : <Text style={styles.miniSubmitText}>Simpan</Text>}
               </TouchableOpacity>
             </View>
@@ -649,12 +642,9 @@ const styles = StyleSheet.create({
   formScrollPadding: { paddingTop: 10, paddingBottom: 16 },
   formSectionDivider: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 8, marginBottom: 14, paddingBottom: 8, borderBottomWidth: 1, borderBottomColor: '#F5F3FF' },
   formSectionText: { fontSize: 12, fontWeight: '700', color: colors.primary },
-  
-  // 🚀 STYLE BARU: Inline Header Layout Kategori
   labelCategoryRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 },
   inlineAddCategoryBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingVertical: 2, paddingHorizontal: 6 },
   inlineAddCategoryText: { fontSize: 11, fontWeight: '700', color: colors.primary },
-  
   inputLabel: { fontSize: 11, fontWeight: '700', color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: 0.5 },
   requiredStar: { color: colors.danger, fontWeight: '800' },
   formInputBox: { backgroundColor: '#FAFAFF', borderWidth: 1.5, borderColor: '#E8E5F5', borderRadius: 14, paddingHorizontal: 14, height: 46, fontSize: 13, color: colors.textPrimary, marginBottom: 14, fontWeight: '500' },
@@ -711,8 +701,6 @@ const styles = StyleSheet.create({
   catDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: '#CBD5E1' },
   catDotActive: { backgroundColor: colors.primary },
   dropdownItemText: { fontSize: 13, color: '#334155', fontWeight: '500' },
-
-  // 🚀 STYLE BARU: Sub-Modal Tambah Kategori Cepat
   subModalOverlay: { flex: 1, backgroundColor: 'rgba(15, 12, 26, 0.45)', justifyContent: 'center', alignItems: 'center', paddingHorizontal: 32 },
   categoryMiniBox: { backgroundColor: '#FFFFFF', width: '100%', borderRadius: 20, padding: 20, elevation: 12, shadowColor: '#000', shadowOffset: { width: 0, height: 5 }, shadowOpacity: 0.15, shadowRadius: 10 },
   miniHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#F5F3FF', marginBottom: 14 },

@@ -1,5 +1,6 @@
 // src/context/AuthContext.js
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { Platform } from 'react-native'; // 🚀 TAMBAHKAN: Import Platform bawaan react-native
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { loginUser, registerUser, fetchProfile } from '../api/authApi';
 
@@ -119,12 +120,27 @@ export function AuthProvider({ children }) {
   };
 
   /**
-   * Proses logout — hapus semua sesi dari storage dan reset state
+   * 🚀 PERBAIKAN UTAMA: Proses logout tahan banting lintas platform (Mobile & Web Browser)
    */
   const logout = async () => {
-    await AsyncStorage.multiRemove([STORAGE_KEY_TOKEN, STORAGE_KEY_USER]);
-    setToken(null);
-    setUser(null);
+    try {
+      // 1. Bersihkan sisa data session dari pangkalan penyimpanan lokal
+      await AsyncStorage.multiRemove([STORAGE_KEY_TOKEN, STORAGE_KEY_USER]);
+    } catch (error) {
+      console.log("Gagal membersihkan session data dari storage:", error);
+    } finally {
+      // 2. Set status state kembali kosongan agar re-render terpancing
+      setToken(null);
+      setUser(null);
+
+      // 3. 💡 KUNCI SAKTI: Jika terdeteksi di Web, paksa browser redirect ke root url '/'
+      // Langkah ini bertugas mereset total navigasi browser yang tadinya sangkut/nyangkut
+      if (Platform.OS === 'web') {
+        if (typeof window !== 'undefined' && window.location) {
+          window.location.href = '/'; 
+        }
+      }
+    }
   };
 
   // Muat sesi tersimpan sekali saat app pertama dibuka
