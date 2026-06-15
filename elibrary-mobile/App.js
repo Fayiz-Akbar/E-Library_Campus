@@ -6,6 +6,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 
+// Context Auth (Person A) — Provider untuk state auth global
+import { AuthProvider } from './src/context/AuthContext';
+import { useAuth } from './src/hooks/useAuth';
+
 // Auth Screens (Person A)
 import SplashScreen from './src/screens/auth/SplashScreen';
 import OnboardingScreen from './src/screens/auth/OnboardingScreen';
@@ -23,7 +27,6 @@ import ManageBooksScreen from './src/screens/admin/ManageBooksScreen';
 import ManageUsersScreen from './src/screens/admin/ManageUsersScreen';
 
 import { colors } from './src/constants/colors';
-import { useAuth } from './src/hooks/useAuth';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -100,18 +103,28 @@ function AdminTabs() {
   );
 }
 
-// Root navigator — mengelola flow autentikasi dan peralihan role
+/**
+ * Root Navigator — menentukan screen awal berdasarkan status auth.
+ * Harus berada DI DALAM AuthProvider agar bisa membaca context auth.
+ * Menggunakan isLoadingSession untuk menghindari flash screen yang salah.
+ */
 function RootNavigator() {
-  const { isLoggedIn, isAdmin, loading } = useAuth();
+  const { isLoggedIn, isAdmin, isLoadingSession } = useAuth();
+
+  // Tentukan screen awal berdasarkan status sesi yang sudah dimuat
+  const getInitialRouteName = () => {
+    if (isLoadingSession) return 'Splash';
+    if (isLoggedIn) return isAdmin ? 'AdminTabs' : 'MainTabs';
+    return 'Splash';
+  };
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {/* Splash selalu ditampilkan pertama, menerima status auth via params */}
-      <Stack.Screen
-        name="Splash"
-        component={SplashScreen}
-        initialParams={{ isLoggedIn, isAdmin }}
-      />
+    <Stack.Navigator
+      screenOptions={{ headerShown: false }}
+      initialRouteName={getInitialRouteName()}
+    >
+      {/* Splash Screen — cek sesi & animasi */}
+      <Stack.Screen name="Splash" component={SplashScreen} />
 
       {/* Flow Autentikasi */}
       <Stack.Screen name="Onboarding" component={OnboardingScreen} />
@@ -128,11 +141,17 @@ function RootNavigator() {
   );
 }
 
+/**
+ * Root App — AuthProvider membungkus segalanya agar state auth
+ * tersedia di seluruh pohon komponen (single source of truth).
+ */
 export default function App() {
   return (
-    <NavigationContainer>
-      <StatusBar barStyle="light-content" translucent={true} backgroundColor="transparent" />
-      <RootNavigator />
-    </NavigationContainer>
+    <AuthProvider>
+      <NavigationContainer>
+        <StatusBar barStyle="light-content" translucent={true} backgroundColor="transparent" />
+        <RootNavigator />
+      </NavigationContainer>
+    </AuthProvider>
   );
 }
