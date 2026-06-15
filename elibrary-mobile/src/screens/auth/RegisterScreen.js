@@ -11,14 +11,17 @@ import {
   Platform,
   ScrollView,
   Alert,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { useAuth } from '../../hooks/useAuth';
+import { getResponsiveContentStyle } from '../../utils/responsive';
 
 const MIN_PASSWORD_LENGTH = 6;
 
 export default function RegisterScreen({ navigation }) {
+  const { width } = useWindowDimensions();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,6 +30,7 @@ export default function RegisterScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   const { register } = useAuth();
+  const formContentStyle = getResponsiveContentStyle(width, 560);
 
   const handleRegister = async () => {
     // Validasi input di sisi client
@@ -78,7 +82,7 @@ export default function RegisterScreen({ navigation }) {
       <View style={styles.headerDecor}>
         <View style={styles.circle1} />
         <View style={styles.circle2} />
-        <View style={styles.headerContent}>
+        <View style={[styles.headerContent, formContentStyle]}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -99,7 +103,7 @@ export default function RegisterScreen({ navigation }) {
       <ScrollView
         style={styles.formContainer}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.formContent}
+        contentContainerStyle={[styles.formContent, formContentStyle]}
       >
         {/* Input Nama */}
         <Text style={styles.inputLabel}>

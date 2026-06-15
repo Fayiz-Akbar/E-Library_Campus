@@ -11,18 +11,22 @@ import {
   TextInput,
   Modal,
   ActivityIndicator,
+  useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
 import { useAuth } from '../../hooks/useAuth';
 import { updateProfile } from '../../api/authApi';
+import { getResponsiveContentStyle } from '../../utils/responsive';
 
 export default function ProfileScreen({ navigation }) {
+  const { width } = useWindowDimensions();
   const { user, logout, refreshProfile } = useAuth();
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [editName, setEditName] = useState('');
   const [editEmail, setEditEmail] = useState('');
   const [saving, setSaving] = useState(false);
+  const contentStyle = getResponsiveContentStyle(width, 720);
 
   useEffect(() => {
     // Sinkronkan data profil dari server saat screen dimount
@@ -111,7 +115,7 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.headerCircle2} />
         <View style={styles.headerCircle3} />
 
-        <View style={styles.avatarContainer}>
+        <View style={[styles.avatarContainer, contentStyle]}>
           <View style={styles.avatarCircle}>
             <Text style={styles.avatarText}>
               {user?.name?.charAt(0)?.toUpperCase() || 'U'}
@@ -136,7 +140,7 @@ export default function ProfileScreen({ navigation }) {
       <ScrollView
         style={styles.contentScroll}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.contentPadding}
+        contentContainerStyle={[styles.contentPadding, contentStyle]}
       >
         {/* QR Member Card */}
         <View style={styles.qrCardContainer}>
@@ -269,7 +273,7 @@ export default function ProfileScreen({ navigation }) {
         onRequestClose={() => setEditModalVisible(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, contentStyle]}>
             <View style={styles.modalDragHandle} />
 
             <View style={styles.modalHeaderRow}>

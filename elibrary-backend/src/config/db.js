@@ -58,9 +58,34 @@ const initDatabase = async () => {
         return_date TIMESTAMP,
         fine_amount DECIMAL(10, 2) DEFAULT 0.00,
         status VARCHAR(20) NOT NULL DEFAULT 'borrowed',
+        override_note TEXT,
+        overridden_at TIMESTAMP,
+        overridden_by INT REFERENCES users(id) ON DELETE SET NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
+
+    ALTER TABLE transactions
+      ADD COLUMN IF NOT EXISTS override_note TEXT;
+
+    ALTER TABLE transactions
+      ADD COLUMN IF NOT EXISTS overridden_at TIMESTAMP;
+
+    ALTER TABLE transactions
+      ADD COLUMN IF NOT EXISTS overridden_by INT REFERENCES users(id) ON DELETE SET NULL;
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_user_id
+      ON transactions(user_id);
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_book_id
+      ON transactions(book_id);
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_status
+      ON transactions(status);
+
+    CREATE INDEX IF NOT EXISTS idx_transactions_active_user_book
+      ON transactions(user_id, book_id, status)
+      WHERE status IN ('borrowed', 'overdue');
   `;
 
   try {
@@ -76,5 +101,6 @@ const initDatabase = async () => {
 
 module.exports = {
   query: (text, params) => pool.query(text, params),
+  getClient: () => pool.connect(),
   initDatabase,
 };

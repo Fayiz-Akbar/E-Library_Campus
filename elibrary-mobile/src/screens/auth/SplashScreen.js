@@ -3,12 +3,15 @@ import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, Animated } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
+import { useAuth } from '../../hooks/useAuth';
 
 /**
  * Splash screen dengan animasi fade-in logo.
- * Mengecek status login dari hook useAuth yang di-pass via route params.
+ * Mengecek status login langsung dari AuthContext agar sesi tetap terbaca
+ * setelah refresh web atau app dibuka ulang.
  */
-export default function SplashScreen({ navigation, route }) {
+export default function SplashScreen({ navigation }) {
+  const { isLoadingSession, isLoggedIn, isAdmin } = useAuth();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
 
@@ -27,10 +30,10 @@ export default function SplashScreen({ navigation, route }) {
       }),
     ]).start();
 
-    // Navigasi otomatis setelah 2.5 detik
-    const timer = setTimeout(() => {
-      const { isLoggedIn, isAdmin } = route.params || {};
+    if (isLoadingSession) return undefined;
 
+    // Navigasi otomatis setelah sesi dari storage selesai dimuat.
+    const timer = setTimeout(() => {
       if (isLoggedIn) {
         navigation.replace(isAdmin ? 'AdminTabs' : 'MainTabs');
       } else {
@@ -39,7 +42,7 @@ export default function SplashScreen({ navigation, route }) {
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [navigation, route.params, fadeAnim, scaleAnim]);
+  }, [navigation, isLoadingSession, isLoggedIn, isAdmin, fadeAnim, scaleAnim]);
 
   return (
     <View style={styles.container}>
