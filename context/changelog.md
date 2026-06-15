@@ -10,6 +10,45 @@ Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
 
 Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
 
+## 2026-06-15 15:52 WIB - Mobile Camera Scan QR
+
+### Added
+
+- Menambahkan dependency `expo-camera` untuk akses kamera dan scan QR/barcode di aplikasi mobile.
+- Mengaktifkan `CameraView` pada `ScanQRScreen`.
+- Menambahkan permission flow kamera menggunakan `useCameraPermissions`.
+- Menambahkan dokumentasi perbaikan di `docs/learn and fix bug/mobile-camera-scan-qr.md`.
+
+### Changed
+
+- Mengubah area scanner dari placeholder menjadi kamera perangkat.
+- Menghubungkan hasil scan kamera ke `processQrValue`, sehingga scan kamera memakai flow transaksi yang sama dengan input manual.
+- Mempertahankan input manual sebagai fallback untuk web, emulator, atau kondisi izin kamera ditolak.
+
+### Notes
+
+- Dependency berhasil dipasang dengan `npm install expo-camera@~17.0.10`.
+- `npm install` menampilkan `11 moderate severity vulnerabilities`; audit/fix dependency belum dilakukan karena berisiko mengubah paket di luar scope fitur kamera.
+
+## 2026-06-15 15:40 WIB - Person 3 Scan QR Mobile
+
+### Added
+
+- Menambahkan API client transaksi mobile di `elibrary-mobile/src/api/transactionApi.js`.
+- Menambahkan hook `useQRScanner` untuk mengelola mode pinjam/kembali, input QR, loading, error, success, dan pencegahan double submit.
+- Menambahkan screen mahasiswa `ScanQRScreen` dengan mode `Pinjam` dan `Kembalikan`.
+- Menambahkan tab `Scan QR` pada navigasi mahasiswa.
+
+### Changed
+
+- Mengubah `borrowApi` agar memakai helper transaksi yang sama dengan fitur Scan QR.
+- Memperbarui dokumentasi progress dan dokumentasi fitur Scan QR sesuai implementasi saat ini.
+
+### Notes
+
+- Scanner kamera native belum dipasang karena dependency kamera/scanner belum tersedia di project Expo.
+- Branch ini menyediakan fallback input manual QR token yang terhubung langsung ke endpoint `/api/transactions/borrow` dan `/api/transactions/return`.
+
 ## 2026-06-15 15:26 WIB - Fix Web Refresh Session Logout
 
 ### Fixed

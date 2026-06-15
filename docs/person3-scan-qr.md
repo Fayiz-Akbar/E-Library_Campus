@@ -21,6 +21,14 @@ Frontend mobile:
 - Tampilkan hasil sukses/gagal.
 - Fallback input manual untuk web atau emulator yang tidak mendukung kamera.
 
+Status implementasi branch saat ini:
+
+- Screen `Scan QR` sudah tersedia pada tab mahasiswa.
+- Mode `Pinjam` dan `Kembalikan` sudah tersedia.
+- Scanner kamera perangkat sudah aktif menggunakan `expo-camera`.
+- Input manual QR token tetap tersedia sebagai fallback.
+- Loading, error, success, dan proteksi double submit sudah tersedia.
+
 Backend:
 
 - Memakai endpoint dari branch `feature/person3-transaction-backend`.
@@ -65,10 +73,18 @@ Target PRD menyebut:
 react-native-vision-camera
 ```
 
-Namun karena project menggunakan Expo, pastikan compatibility lebih dulu. Jika Expo Go tidak mendukung library tertentu, fallback yang aman:
+Namun karena project menggunakan Expo, implementasi branch ini memakai:
 
-- Gunakan scanner yang kompatibel dengan Expo.
-- Atau sediakan input manual QR token untuk demo web.
+```text
+expo-camera
+```
+
+Alasan:
+
+- Lebih cocok untuk Expo.
+- Mendukung `CameraView`.
+- Mendukung pembacaan QR/barcode melalui `onBarcodeScanned`.
+- Bisa berjalan di perangkat melalui permission kamera bawaan.
 
 ## Flow User
 
@@ -137,6 +153,12 @@ Flow fallback:
 2. User paste/ketik QR token.
 3. User tekan tombol `Proses`.
 4. Aplikasi memanggil endpoint yang sama.
+
+Catatan implementasi:
+
+- Kamera menjadi jalur utama scan QR/barcode.
+- Fallback manual tetap tersedia untuk demo web/emulator dan pengujian endpoint.
+- Hasil kamera memanggil `processQrValue(rawQrValue)` dari `useQRScanner`.
 
 ## Data Request
 
