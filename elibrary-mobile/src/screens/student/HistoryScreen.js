@@ -8,6 +8,7 @@ import {
   Text,
   TouchableOpacity,
   View,
+  Platform, 
   useWindowDimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -95,17 +96,16 @@ export default function HistoryScreen({ navigation }) {
         contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
         refreshControl={<RefreshControl refreshing={historyLoading} onRefresh={() => loadHistory(selectedStatus)} />}
       >
+        {/* ===== HEADER Clean Version ===== */}
         <View style={[styles.header, contentStyle]}>
-          <View>
+          <View style={{ flex: 1 }}>
             <Text style={styles.eyebrow}>Aktivitas</Text>
             <Text style={styles.title}>Riwayat Peminjaman</Text>
             <Text style={styles.subtitle}>Pantau status buku, jatuh tempo, dan denda dari transaksi kamu.</Text>
           </View>
-          <TouchableOpacity style={styles.notificationButton} onPress={() => navigation.navigate('Notification')} activeOpacity={0.85}>
-            <Ionicons name="notifications-outline" size={22} color={colors.primary} />
-          </TouchableOpacity>
         </View>
 
+        {/* ===== FILTER ROW ===== */}
         <View style={[styles.filterRow, contentStyle]}>
           {HISTORY_FILTERS.map((filter) => {
             const active = selectedStatus === filter.key;
@@ -122,6 +122,7 @@ export default function HistoryScreen({ navigation }) {
           })}
         </View>
 
+        {/* ===== FEEDBACK ERROR ===== */}
         {historyError ? (
           <View style={[styles.feedbackBox, styles.errorBox, contentStyle]}>
             <Ionicons name="alert-circle" size={18} color={colors.danger} />
@@ -129,6 +130,7 @@ export default function HistoryScreen({ navigation }) {
           </View>
         ) : null}
 
+        {/* ===== LOADING STATE ===== */}
         {historyLoading && history.length === 0 ? (
           <View style={[styles.centerState, contentStyle]}>
             <ActivityIndicator size="small" color={colors.primary} />
@@ -136,6 +138,7 @@ export default function HistoryScreen({ navigation }) {
           </View>
         ) : null}
 
+        {/* ===== EMPTY STATE ===== */}
         {!historyLoading && history.length === 0 && !historyError ? (
           <View style={[styles.centerState, contentStyle]}>
             <Ionicons name="file-tray-outline" size={42} color={colors.primaryLight} />
@@ -144,6 +147,7 @@ export default function HistoryScreen({ navigation }) {
           </View>
         ) : null}
 
+        {/* ===== TRANSACTION LIST ===== */}
         <View style={[styles.list, contentStyle]}>
           {history.map((item) => (
             <TransactionItem key={String(item.id)} item={item} />
@@ -156,7 +160,10 @@ export default function HistoryScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
-  scrollContent: { paddingTop: 56, paddingBottom: 32 },
+  scrollContent: { 
+    paddingTop: Platform.OS === 'android' ? 68 : 56, 
+    paddingBottom: 32 
+  },
   header: {
     backgroundColor: colors.primary,
     borderRadius: 18,
@@ -169,14 +176,6 @@ const styles = StyleSheet.create({
   eyebrow: { fontSize: 12, color: '#EDE9FE', fontWeight: '800', textTransform: 'uppercase', marginBottom: 4 },
   title: { fontSize: 24, lineHeight: 30, color: '#FFFFFF', fontWeight: '900' },
   subtitle: { marginTop: 8, fontSize: 13, lineHeight: 20, color: '#F5F3FF', maxWidth: 520 },
-  notificationButton: {
-    width: 46,
-    height: 46,
-    borderRadius: 14,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 16 },
   filterButton: {
     minHeight: 38,

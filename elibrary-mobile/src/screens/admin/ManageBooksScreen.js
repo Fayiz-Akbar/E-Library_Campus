@@ -36,7 +36,7 @@ export default function ManageBooksScreen() {
   const [categorySubmitLoading, setCategorySubmitLoading] = useState(false);
 
   const [form, setForm] = useState({
-    category_id: null, title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: ''
+    category_id: null, title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: '', qr_code: ''
   });
   const [submitLoading, setSubmitLoading] = useState(false);
   const contentStyle = getResponsiveContentStyle(width, 1080);
@@ -96,7 +96,7 @@ export default function ManageBooksScreen() {
       const res = await axiosInstance.post('/categories', { name: newCategoryName.trim() });
       
       if (res.data && res.data.success) {
-        showAlert('Sukses 🎉', `Kategori "${newCategoryName}" berhasil ditambahkan.`);
+        showAlert('Sukses ', `Kategori "${newCategoryName}" berhasil ditambahkan.`);
         await loadCategoriesFromBackend();
         
         const createdCategory = res.data.data;
@@ -137,10 +137,11 @@ export default function ManageBooksScreen() {
   };
 
   const openQrModal = (book) => {
+    // Menggunakan token asli database, fallback pakai string identitas ID jika buku sangat lama kosong
     const bookToken = book.qr_code || `BOOK-${book.id}`;
     setActiveQrData({ id: book.id, title: book.title, token: bookToken });
-    setQrActionType('pinjam'); // Reset default aksi peminjaman
-    setQrDurationDays('7');     // Reset default tenggat waktu 7 hari
+    setQrActionType('pinjam'); 
+    setQrDurationDays('7');     
     setQrModalVisible(true);
   };
 
@@ -148,7 +149,20 @@ export default function ManageBooksScreen() {
     setSelectedBookId(null);
     setImageSourceType('url');
     setDropdownOpen(false);
-    setForm({ category_id: null, title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: '' });
+    
+    // 🚀 REVISI SOLUSI 1: Suntik otomatis token qr_code unik saat buat buku baru
+    setForm({ 
+      category_id: null, 
+      title: '', 
+      author: '', 
+      publisher: '', 
+      isbn: '', 
+      stock: '', 
+      summary: '', 
+      cover_image: '',
+      qr_code: `LIB-${Math.random().toString(36).substring(2, 9).toUpperCase()}` // Otomatis terisi di database
+    });
+    
     setModalVisible(true);
   };
 
@@ -158,6 +172,7 @@ export default function ManageBooksScreen() {
     setImageSourceType(isUrl ? 'url' : 'upload');
     setDropdownOpen(false);
 
+    // 🚀 REVISI SOLUSI 1: Kunci agar qr_code yang sudah ada di database ikut ter-update
     setForm({
       category_id: book.category_id || null,
       title: book.title,
@@ -166,14 +181,15 @@ export default function ManageBooksScreen() {
       isbn: book.isbn || '',
       stock: book.stock ? book.stock.toString() : '1',
       summary: book.summary || '',
-      cover_image: book.cover_image || ''
+      cover_image: book.cover_image || '',
+      qr_code: book.qr_code || `LIB-${Math.random().toString(36).substring(2, 9).toUpperCase()}` // Jaga-jaga jika buku lama kosong
     });
     setModalVisible(true);
   };
 
   const handleSaveBook = async () => {
     if (!form.title || !form.author || !form.stock) {
-      showAlert('Peringatan ', 'Judul, Penulis, dan Jumlah Stok wajib diisi, Bree!');
+      showAlert('Peringatan ⚠️', 'Judul, Penulis, dan Jumlah Stok wajib diisi, Bree!');
       return;
     }
 
@@ -192,7 +208,7 @@ export default function ManageBooksScreen() {
         loadAdminCatalog(); 
       }
     } catch (err) {
-      showAlert('Gagal ', err.message || 'Terjadi kesalahan sistem internal.');
+      showAlert('Gagal ❌', err.message || 'Terjadi kesalahan sistem internal.');
     } finally {
       setSubmitLoading(false);
     }
@@ -203,14 +219,14 @@ export default function ManageBooksScreen() {
       try {
         const res = await adminDeleteBook(book.id);
         if (res.success) {
-          showAlert('Terhapus', res.message || 'Buku berhasil dimusnahkan.');
+          showAlert('Terhapus 🗑️', res.message || 'Buku berhasil dimusnahkan.');
           loadAdminCatalog(); 
         } else {
-          showAlert('Gagal', res.message || 'Gagal menghapus buku.');
+          showAlert('Gagal ⚠️', res.message || 'Gagal menghapus buku.');
         }
       } catch (err) {
         const serverMessage = err.response?.data?.message || 'Gagal menghapus buku dari server. Periksa hak akses Admin Anda.';
-        showAlert('Error Hapus', serverMessage);
+        showAlert('Error Hapus ❌', serverMessage);
       }
     };
 
@@ -671,10 +687,7 @@ const styles = StyleSheet.create({
   qrActionBtn: { backgroundColor: '#F0EFFF', borderRadius: 10 },
   editActionBtn: { backgroundColor: '#FFF7E6', borderRadius: 10 },
   deleteActionBtn: { backgroundColor: '#FEE2E2', borderRadius: 10 },
-  
-  // 🚀 PERBAIKAN: Jarak Tombol Tambah Mengambang (Aman dari Tombol Navigasi Sistem Android)
   floatingAddBtn: { position: 'absolute', bottom: Platform.OS === 'android' ? 48 : 28, right: 22, backgroundColor: colors.primary, borderRadius: 18, paddingHorizontal: 18, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', elevation: 8, shadowColor: colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 10 },
-  
   fabInner: { width: 28, height: 28, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 8 },
   fabLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 },
   centerLoading: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 80 },
@@ -764,7 +777,7 @@ const styles = StyleSheet.create({
   miniSubmitBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center', minWidth: 80 },
   miniSubmitText: { fontSize: 12, fontWeight: '800', color: '#FFFFFF' },
 
-  // 🚀 STYLES BARU: Pendukung Konfigurasi QR Code Kustom & Dinamis
+  // STYLES: Pendukung Konfigurasi QR Code Kustom & Dinamis
   qrConfigContainer: { width: '85%', marginTop: 14, gap: 8 },
   configLabel: { fontSize: 11, fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 },
   actionToggleRow: { flexDirection: 'row', backgroundColor: '#F1F5F9', borderRadius: 10, padding: 4, gap: 4 },
