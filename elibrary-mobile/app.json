@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "7e8a7246-0d80-4aa5-b797-e7b5fe7152a1"
+      }
+    },
+    "android": {
+      "package": "com.rezemozemo.elibrarymobile"
+    }
+  }
+}

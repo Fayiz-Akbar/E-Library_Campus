@@ -62,9 +62,56 @@ export default function ScanQRScreen({ navigation }) {
   const hasCameraPermission = cameraPermission?.granted;
   const isCameraPermissionDenied = cameraPermission && !cameraPermission.granted && cameraPermission.canAskAgain === false;
 
+  // 🚀 REVISI UTAMA: Interseptor Scanner Kamera untuk Membaca Payload JSON Baru Admin
   const handleBarcodeScanned = ({ data }) => {
     if (!data || isProcessing || successMessage) return;
+    
+    try {
+      // Coba urai data barangkali bentuknya JSON kustom dari Admin yang baru
+      const parsedPayload = JSON.parse(data);
+      
+      if (parsedPayload && parsedPayload.token) {
+        // 🔥 SMART LOGIC: Otomatis ganti tab mode mahasiswa sesuai perintah aksi dari QR Admin!
+        if (parsedPayload.action === 'pinjam' && mode !== TRANSACTION_MODES.BORROW) {
+          handleModeChange(TRANSACTION_MODES.BORROW);
+        } else if (parsedPayload.action === 'kembali' && mode !== TRANSACTION_MODES.RETURN) {
+          handleModeChange(TRANSACTION_MODES.RETURN);
+        }
+        
+        // Kirim hanya nilai token murninya saja ke hook processing bawaan kelompokmu
+        processQrValue(parsedPayload.token);
+        return;
+      }
+    } catch (error) {
+      // Fallback: Jika data bukan JSON (QR model lama/plain text), kirim apa adanya langsung
+      console.log("Membaca QR format lama / plain text token:", data);
+    }
+
+    // Eksekusi default jika lolos dari pengecekan JSON
     processQrValue(data);
+  };
+
+  // 🚀 REVISI KEDUA: Interseptor Input Manual (Jaga-jaga kalau mahasiswa copas mentah string JSON Admin)
+  const handleManualSubmit = () => {
+    const trimmedInput = qrInput.trim();
+    if (!trimmedInput || isProcessing) return;
+
+    try {
+      const parsedPayload = JSON.parse(trimmedInput);
+      if (parsedPayload && parsedPayload.token) {
+        if (parsedPayload.action === 'pinjam' && mode !== TRANSACTION_MODES.BORROW) {
+          handleModeChange(TRANSACTION_MODES.BORROW);
+        } else if (parsedPayload.action === 'kembali' && mode !== TRANSACTION_MODES.RETURN) {
+          handleModeChange(TRANSACTION_MODES.RETURN);
+        }
+        processQrValue(parsedPayload.token);
+        return;
+      }
+    } catch (error) {
+      // Abaikan jika input manual berupa teks biasa
+    }
+
+    processQrValue(trimmedInput);
   };
 
   const renderCameraArea = () => {
@@ -129,7 +176,7 @@ export default function ScanQRScreen({ navigation }) {
             <Text style={styles.eyebrow}>Transaksi Buku</Text>
             <Text style={styles.title}>Scan QR</Text>
             <Text style={styles.subtitle}>
-              Pilih mode transaksi, lalu arahkan kamera ke QR/barcode buku untuk memproses data ke backend.
+              Pilih mode transaksi, atau langsung scan QR kustom dari Admin untuk memproses data ke cloud backend.
             </Text>
           </View>
           <View style={styles.headerIcon}>
@@ -175,7 +222,7 @@ export default function ScanQRScreen({ navigation }) {
             <TextInput
               value={qrInput}
               onChangeText={setQrInput}
-              placeholder="Contoh: BOOK-QR-TOKEN atau payload QR buku"
+              placeholder="Contoh: BOOK-QR-TOKEN atau copas payload JSON QR"
               placeholderTextColor="#94A3B8"
               style={styles.input}
               autoCapitalize="none"
@@ -188,7 +235,7 @@ export default function ScanQRScreen({ navigation }) {
                 styles.primaryButton,
                 (!qrInput.trim() || isProcessing) && styles.primaryButtonDisabled,
               ]}
-              onPress={() => processQrValue(qrInput)}
+              onPress={handleManualSubmit}
               activeOpacity={0.85}
               disabled={!qrInput.trim() || isProcessing}
             >

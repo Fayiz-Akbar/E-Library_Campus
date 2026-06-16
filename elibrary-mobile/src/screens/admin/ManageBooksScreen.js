@@ -24,9 +24,11 @@ export default function ManageBooksScreen() {
   const [imageSourceType, setImageSourceType] = useState('url'); 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
-  // State Modal QR Code
+  // State Modal QR Code & Konfigurasi Dinamis (Aksi + Batas Waktu)
   const [qrModalVisible, setQrModalVisible] = useState(false);
-  const [activeQrData, setActiveQrData] = useState({ title: '', qr_code: '' });
+  const [activeQrData, setActiveQrData] = useState({ id: '', title: '', token: '' });
+  const [qrActionType, setQrActionType] = useState('pinjam'); // Pilihan: 'pinjam' atau 'kembali'
+  const [qrDurationDays, setQrDurationDays] = useState('7'); // Default masa tenggat 7 hari
 
   // State: Khusus Tambah Kategori Cepat (Inline Category Creator)
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
@@ -135,11 +137,10 @@ export default function ManageBooksScreen() {
   };
 
   const openQrModal = (book) => {
-    if (!book.qr_code) {
-      showAlert('Peringatan ⚠️', 'Buku lama ini belum memiliki data QR Code Token, silakan edit lalu simpan ulang terlebih dahulu.');
-      return;
-    }
-    setActiveQrData({ title: book.title, qr_code: book.qr_code });
+    const bookToken = book.qr_code || `BOOK-${book.id}`;
+    setActiveQrData({ id: book.id, title: book.title, token: bookToken });
+    setQrActionType('pinjam'); // Reset default aksi peminjaman
+    setQrDurationDays('7');     // Reset default tenggat waktu 7 hari
     setQrModalVisible(true);
   };
 
@@ -172,7 +173,7 @@ export default function ManageBooksScreen() {
 
   const handleSaveBook = async () => {
     if (!form.title || !form.author || !form.stock) {
-      showAlert('Peringatan ⚠️', 'Judul, Penulis, dan Jumlah Stok wajib diisi, Bree!');
+      showAlert('Peringatan', 'Judul, Penulis, dan Jumlah Stok wajib diisi, Bree!');
       return;
     }
 
@@ -186,43 +187,39 @@ export default function ManageBooksScreen() {
       }
 
       if (res.success) {
-        showAlert('Sukses 🎉', res.message);
+        showAlert('Sukses ', res.message);
         setModalVisible(false);
         loadAdminCatalog(); 
       }
     } catch (err) {
-      showAlert('Gagal ❌', err.message || 'Terjadi kesalahan sistem internal.');
+      showAlert('Gagal ', err.message || 'Terjadi kesalahan sistem internal.');
     } finally {
       setSubmitLoading(false);
     }
   };
 
-  // 🚀 REVISI UTAMA: Fungsi Hapus Lintas Platform (Tahan Banting di Browser Laptop)
   const handleDeleteConfirm = (book) => {
     const executeDelete = async () => {
       try {
         const res = await adminDeleteBook(book.id);
         if (res.success) {
-          showAlert('Terhapus 🗑️', res.message || 'Buku berhasil dimusnahkan.');
+          showAlert('Terhapus', res.message || 'Buku berhasil dimusnahkan.');
           loadAdminCatalog(); 
         } else {
-          showAlert('Gagal ⚠️', res.message || 'Gagal menghapus buku.');
+          showAlert('Gagal', res.message || 'Gagal menghapus buku.');
         }
       } catch (err) {
         const serverMessage = err.response?.data?.message || 'Gagal menghapus buku dari server. Periksa hak akses Admin Anda.';
-        showAlert('Error Hapus ❌', serverMessage);
+        showAlert('Error Hapus', serverMessage);
       }
     };
 
-    // 💡 JALUR WEB BROWSER LAPTOP
     if (Platform.OS === 'web') {
       const confirmWeb = window.confirm(`Apakah kamu yakin ingin menghapus buku "${book.title}" secara permanen dari sistem database, Bree?`);
       if (confirmWeb) {
         executeDelete();
       }
-    } 
-    // 💡 JALUR MOBILE HP / EMULATOR
-    else {
+    } else {
       Alert.alert(
         'Konfirmasi Pemusnahan',
         `Apakah kamu yakin ingin menghapus buku "${book.title}" secara permanen dari sistem database?`,
@@ -250,6 +247,15 @@ export default function ManageBooksScreen() {
   const totalBooks = books.length;
   const totalStock = books.reduce((sum, b) => sum + (b.stock || 0), 0);
   const totalAvailable = books.reduce((sum, b) => sum + (b.available_stock || 0), 0);
+
+  // Payload Bundling JSON data QR
+  const qrStringPayload = JSON.stringify({
+    book_id: activeQrData.id,
+    token: activeQrData.token,
+    action: qrActionType,
+    duration: qrActionType === 'pinjam' ? parseInt(qrDurationDays) || 7 : 0,
+    generated_at: new Date().toISOString()
+  });
 
   const renderAdminBookRow = ({ item, index }) => (
     <View style={styles.bookRowCard}>
@@ -539,7 +545,7 @@ export default function ManageBooksScreen() {
         </View>
       </Modal>
 
-      {/* ===== MODAL PREVIEW QR CODE ===== */}
+      {/* ===== MODAL PREVIEW QR CODE TUNED (DURASI & AKSI DINAMIS) ===== */}
       <Modal animationType="fade" transparent={true} visible={qrModalVisible} onRequestClose={() => setQrModalVisible(false)}>
         <View style={styles.modalCenterOverlay}>
           <View style={styles.qrCardWrapper}>
@@ -549,15 +555,60 @@ export default function ManageBooksScreen() {
               <Text style={styles.qrModalSubtitle}>TOKEN IDENTIFIKASI QR CODE</Text>
             </View>
             <Text style={styles.qrModalTitle} numberOfLines={2}>{activeQrData.title}</Text>
+            
+            {/* 🚀 TRANSAKSI TOGGLE CONFIGURATION PANEL */}
+            <View style={styles.qrConfigContainer}>
+              <Text style={styles.configLabel}>Tipe Transaksi:</Text>
+              <View style={styles.actionToggleRow}>
+                <TouchableOpacity 
+                  style={[styles.toggleTab, qrActionType === 'pinjam' ? styles.toggleTabActivePinjam : styles.toggleTabInactive]} 
+                  onPress={() => setQrActionType('pinjam')}
+                >
+                  <Ionicons name="log-out-outline" size={14} color={qrActionType === 'pinjam' ? '#FFFFFF' : '#64748B'} />
+                  <Text style={[styles.toggleTabText, qrActionType === 'pinjam' && styles.toggleTextActive]}>Peminjaman</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.toggleTab, qrActionType === 'kembali' ? styles.toggleTabActiveKembali : styles.toggleTabInactive]} 
+                  onPress={() => setQrActionType('kembali')}
+                >
+                  <Ionicons name="log-in-outline" size={14} color={qrActionType === 'kembali' ? '#FFFFFF' : '#64748B'} />
+                  <Text style={[styles.toggleTabText, qrActionType === 'kembali' && styles.toggleTextActive]}>Pengembalian</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* DURATION SETTING INPUT */}
+              {qrActionType === 'pinjam' && (
+                <View style={styles.durationInputStyleRow}>
+                  <Text style={styles.configLabel}>Durasi Peminjaman (Hari):</Text>
+                  <View style={styles.durationInputWrapper}>
+                    <TextInput 
+                      style={styles.qrDurationInput}
+                      keyboardType="numeric"
+                      maxLength={2}
+                      value={qrDurationDays}
+                      onChangeText={setQrDurationDays}
+                      placeholder="7"
+                    />
+                    <Text style={styles.durationUnitText}>Hari</Text>
+                  </View>
+                </View>
+              )}
+            </View>
+
+            {/* BOX CONTAINER GENERATOR QR CODE */}
             <View style={styles.qrImageContainer}>
               <View style={styles.qrCornerTL} /><View style={styles.qrCornerTR} /><View style={styles.qrCornerBL} /><View style={styles.qrCornerBR} />
-              {activeQrData.qr_code ? (
-                <Image source={{ uri: activeQrData.qr_code.startsWith('data:image') ? activeQrData.qr_code : `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(activeQrData.qr_code)}` }} style={styles.bigQrCodeImage} resizeMode="contain" />
+              {activeQrData.token ? (
+                <Image source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrStringPayload)}` }} style={styles.bigQrCodeImage} resizeMode="contain" />
               ) : null}
             </View>
             <View style={styles.qrInstructionBox}>
               <Ionicons name="scan-outline" size={16} color={colors.primary} />
-              <Text style={styles.qrInstructionText}>Arahkan kamera HP mahasiswa ke kode QR untuk memproses peminjaman kilat.</Text>
+              <Text style={styles.qrInstructionText}>
+                {qrActionType === 'pinjam' 
+                  ? `Masa berlaku token peminjaman dikunci untuk ${qrDurationDays || 7} hari ke depan sejak discan.` 
+                  : 'Arahkan kamera HP mahasiswa untuk memproses validasi pengembalian inventaris.'}
+              </Text>
             </View>
             <TouchableOpacity style={styles.closeQrBtn} onPress={() => setQrModalVisible(false)} activeOpacity={0.8}>
               <Ionicons name="close-outline" size={18} color="#FFFFFF" style={{ marginRight: 6 }} />
@@ -620,16 +671,15 @@ const styles = StyleSheet.create({
   qrActionBtn: { backgroundColor: '#F0EFFF', borderRadius: 10 },
   editActionBtn: { backgroundColor: '#FFF7E6', borderRadius: 10 },
   deleteActionBtn: { backgroundColor: '#FEE2E2', borderRadius: 10 },
-  floatingAddBtn: { position: 'absolute', bottom: 28, right: 22, backgroundColor: colors.primary, borderRadius: 18, paddingHorizontal: 18, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', elevation: 8, shadowColor: colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 10 },
+  
+  // 🚀 PERBAIKAN: Jarak Tombol Tambah Mengambang (Aman dari Tombol Navigasi Sistem Android)
+  floatingAddBtn: { position: 'absolute', bottom: Platform.OS === 'android' ? 48 : 28, right: 22, backgroundColor: colors.primary, borderRadius: 18, paddingHorizontal: 18, paddingVertical: 14, flexDirection: 'row', alignItems: 'center', elevation: 8, shadowColor: colors.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.35, shadowRadius: 10 },
+  
   fabInner: { width: 28, height: 28, borderRadius: 10, backgroundColor: 'rgba(255,255,255,0.2)', justifyContent: 'center', alignItems: 'center', marginRight: 8 },
   fabLabel: { color: '#FFFFFF', fontSize: 13, fontWeight: '800', letterSpacing: 0.3 },
   centerLoading: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingBottom: 80 },
   loadingSpinnerWrap: { width: 64, height: 64, borderRadius: 20, backgroundColor: '#F5F3FF', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
   loadingText: { color: colors.textPrimary, fontSize: 14, fontWeight: '700' },
-  emptyStateContainer: { alignItems: 'center', paddingTop: 60, paddingHorizontal: 40 },
-  emptyIconCircle: { width: 100, height: 100, borderRadius: 50, backgroundColor: '#F5F3FF', justifyContent: 'center', alignItems: 'center', marginBottom: 20, borderWidth: 3, borderColor: '#ECE9FA' },
-  emptyTitle: { fontSize: 17, fontWeight: '800', color: colors.textPrimary, marginBottom: 8 },
-  emptySubtitle: { fontSize: 12, color: colors.textSecondary, textAlign: 'center', lineHeight: 18 },
   modalBlurOverlay: { flex: 1, backgroundColor: 'rgba(30, 27, 46, 0.6)', justifyContent: 'flex-end' },
   modalFormWrapper: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 28, borderTopRightRadius: 28, paddingHorizontal: 22, paddingTop: 10, paddingBottom: Platform.OS === 'ios' ? 40 : 30, maxHeight: '90%', width: '100%' },
   modalDragHandle: { width: 40, height: 4, borderRadius: 2, backgroundColor: '#E2E8F0', alignSelf: 'center', marginBottom: 14 },
@@ -712,5 +762,20 @@ const styles = StyleSheet.create({
   miniCancelBtn: { paddingVertical: 10, paddingHorizontal: 16, borderRadius: 10, backgroundColor: '#F5F3FF' },
   miniCancelText: { fontSize: 12, fontWeight: '700', color: colors.textSecondary },
   miniSubmitBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center', minWidth: 80 },
-  miniSubmitText: { fontSize: 12, fontWeight: '800', color: '#FFFFFF' }
+  miniSubmitText: { fontSize: 12, fontWeight: '800', color: '#FFFFFF' },
+
+  // 🚀 STYLES BARU: Pendukung Konfigurasi QR Code Kustom & Dinamis
+  qrConfigContainer: { width: '85%', marginTop: 14, gap: 8 },
+  configLabel: { fontSize: 11, fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 },
+  actionToggleRow: { flexDirection: 'row', backgroundColor: '#F1F5F9', borderRadius: 10, padding: 4, gap: 4 },
+  toggleTab: { flex: 1, flexDirection: 'row', height: 34, borderRadius: 8, justifyContent: 'center', alignItems: 'center', gap: 6 },
+  toggleTabInactive: { backgroundColor: 'transparent' },
+  toggleTabActivePinjam: { backgroundColor: colors.primary },
+  toggleTabActiveKembali: { backgroundColor: '#10B981' },
+  toggleTabText: { fontSize: 12, fontWeight: '700', color: '#64748B' },
+  toggleTextActive: { color: '#FFFFFF' },
+  durationInputStyleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, backgroundColor: '#F8FAFC', padding: 8, borderRadius: 10, borderWidth: 1, borderColor: '#E2E8F0' },
+  durationInputWrapper: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  qrDurationInput: { backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: colors.primaryLight, borderRadius: 6, width: 44, height: 30, textAlign: 'center', fontSize: 13, fontWeight: '700', color: colors.textPrimary, padding: 0 },
+  durationUnitText: { fontSize: 12, fontWeight: '700', color: colors.textPrimary }
 });

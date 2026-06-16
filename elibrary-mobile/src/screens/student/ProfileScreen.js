@@ -385,7 +385,12 @@ const styles = StyleSheet.create({
   roleBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.18)', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, marginTop: 12, gap: 6 },
   roleBadgeText: { color: '#FFFFFF', fontSize: 12, fontWeight: '700' },
   contentScroll: { flex: 1 },
-  contentPadding: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
+ 
+  contentPadding: { 
+    paddingHorizontal: 20, 
+    paddingTop: 20, 
+    paddingBottom: Platform.OS === 'android' ? 80 : 40 // Naikkan jarak dari 40 ke 80 khusus Android
+  },
   qrCardContainer: { backgroundColor: '#FFFFFF', borderRadius: 20, padding: 20, alignItems: 'center', elevation: 3, shadowColor: '#7C3AED', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.08, shadowRadius: 8, borderWidth: 1, borderColor: '#F0EEFF', marginBottom: 16 },
   qrCardHeader: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginBottom: 16 },
   qrIconWrap: { width: 36, height: 36, borderRadius: 12, backgroundColor: colors.surface, justifyContent: 'center', alignItems: 'center', marginRight: 12 },
