@@ -37,3 +37,5 @@ app.get('/', (req, res) => res.json({ message: 'E-Library API berjalan!' }));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
+
+module.exports = app;
