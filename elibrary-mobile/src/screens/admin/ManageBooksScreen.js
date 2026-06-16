@@ -18,30 +18,26 @@ export default function ManageBooksScreen() {
   const [categories, setCategories] = useState([]); 
   const [searchQuery, setSearchQuery] = useState('');
   
-  // State Form Modal CRUD Buku
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedBookId, setSelectedBookId] = useState(null); 
   const [imageSourceType, setImageSourceType] = useState('url'); 
   const [dropdownOpen, setDropdownOpen] = useState(false);
   
-  // State Modal QR Code & Konfigurasi Dinamis (Aksi + Batas Waktu)
   const [qrModalVisible, setQrModalVisible] = useState(false);
-  const [activeQrData, setActiveQrData] = useState({ id: '', title: '', token: '' });
-  const [qrActionType, setQrActionType] = useState('pinjam'); // Pilihan: 'pinjam' atau 'kembali'
-  const [qrDurationDays, setQrDurationDays] = useState('7'); // Default masa tenggat 7 hari
+  const [activeQrData, setActiveQrData] = useState({ id: '', title: '' }); // 🚀 PERBAIKAN: Token dihapus
+  const [qrActionType, setQrActionType] = useState('pinjam');
+  const [qrDurationDays, setQrDurationDays] = useState('7');
 
-  // State: Khusus Tambah Kategori Cepat (Inline Category Creator)
   const [categoryModalVisible, setCategoryModalVisible] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [categorySubmitLoading, setCategorySubmitLoading] = useState(false);
 
   const [form, setForm] = useState({
-    category_id: null, title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: '', qr_code: ''
+    category_id: null, title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: ''
   });
   const [submitLoading, setSubmitLoading] = useState(false);
   const contentStyle = getResponsiveContentStyle(width, 1080);
 
-  // Helper untuk memunculkan Alert yang aman di Web maupun Mobile
   const showAlert = (title, message) => {
     if (Platform.OS === 'web') {
       window.alert(`${title}: ${message}`);
@@ -96,7 +92,7 @@ export default function ManageBooksScreen() {
       const res = await axiosInstance.post('/categories', { name: newCategoryName.trim() });
       
       if (res.data && res.data.success) {
-        showAlert('Sukses ', `Kategori "${newCategoryName}" berhasil ditambahkan.`);
+        showAlert('Sukses 🎉', `Kategori "${newCategoryName}" berhasil ditambahkan.`);
         await loadCategoriesFromBackend();
         
         const createdCategory = res.data.data;
@@ -137,9 +133,8 @@ export default function ManageBooksScreen() {
   };
 
   const openQrModal = (book) => {
-    // Menggunakan token asli database, fallback pakai string identitas ID jika buku sangat lama kosong
-    const bookToken = book.qr_code || `BOOK-${book.id}`;
-    setActiveQrData({ id: book.id, title: book.title, token: bookToken });
+    // 🚀 PERBAIKAN: Hanya kirim ID dan Title. Base64 dibuang agar limit QR URL tidak pecah!
+    setActiveQrData({ id: book.id, title: book.title });
     setQrActionType('pinjam'); 
     setQrDurationDays('7');     
     setQrModalVisible(true);
@@ -149,20 +144,7 @@ export default function ManageBooksScreen() {
     setSelectedBookId(null);
     setImageSourceType('url');
     setDropdownOpen(false);
-    
-    // 🚀 REVISI SOLUSI 1: Suntik otomatis token qr_code unik saat buat buku baru
-    setForm({ 
-      category_id: null, 
-      title: '', 
-      author: '', 
-      publisher: '', 
-      isbn: '', 
-      stock: '', 
-      summary: '', 
-      cover_image: '',
-      qr_code: `LIB-${Math.random().toString(36).substring(2, 9).toUpperCase()}` // Otomatis terisi di database
-    });
-    
+    setForm({ category_id: null, title: '', author: '', publisher: '', isbn: '', stock: '', summary: '', cover_image: '' });
     setModalVisible(true);
   };
 
@@ -172,7 +154,6 @@ export default function ManageBooksScreen() {
     setImageSourceType(isUrl ? 'url' : 'upload');
     setDropdownOpen(false);
 
-    // 🚀 REVISI SOLUSI 1: Kunci agar qr_code yang sudah ada di database ikut ter-update
     setForm({
       category_id: book.category_id || null,
       title: book.title,
@@ -181,8 +162,7 @@ export default function ManageBooksScreen() {
       isbn: book.isbn || '',
       stock: book.stock ? book.stock.toString() : '1',
       summary: book.summary || '',
-      cover_image: book.cover_image || '',
-      qr_code: book.qr_code || `LIB-${Math.random().toString(36).substring(2, 9).toUpperCase()}` // Jaga-jaga jika buku lama kosong
+      cover_image: book.cover_image || ''
     });
     setModalVisible(true);
   };
@@ -203,7 +183,7 @@ export default function ManageBooksScreen() {
       }
 
       if (res.success) {
-        showAlert('Sukses ', res.message);
+        showAlert('Sukses 🎉', res.message);
         setModalVisible(false);
         loadAdminCatalog(); 
       }
@@ -219,14 +199,14 @@ export default function ManageBooksScreen() {
       try {
         const res = await adminDeleteBook(book.id);
         if (res.success) {
-          showAlert('Terhapus ', res.message || 'Buku berhasil dimusnahkan.');
+          showAlert('Terhapus 🗑️', res.message || 'Buku berhasil dimusnahkan.');
           loadAdminCatalog(); 
         } else {
-          showAlert('Gagal ', res.message || 'Gagal menghapus buku.');
+          showAlert('Gagal ⚠️', res.message || 'Gagal menghapus buku.');
         }
       } catch (err) {
         const serverMessage = err.response?.data?.message || 'Gagal menghapus buku dari server. Periksa hak akses Admin Anda.';
-        showAlert('Error Hapus ', serverMessage);
+        showAlert('Error Hapus ❌', serverMessage);
       }
     };
 
@@ -264,13 +244,11 @@ export default function ManageBooksScreen() {
   const totalStock = books.reduce((sum, b) => sum + (b.stock || 0), 0);
   const totalAvailable = books.reduce((sum, b) => sum + (b.available_stock || 0), 0);
 
-  // Payload Bundling JSON data QR
+  // 🚀 PERBAIKAN: Payload JSON Bersih. Gak ada Base64 string lagi, ukuran dijamin kecil dan load QR instant!
   const qrStringPayload = JSON.stringify({
     book_id: activeQrData.id,
-    token: activeQrData.token,
     action: qrActionType,
     duration: qrActionType === 'pinjam' ? parseInt(qrDurationDays) || 7 : 0,
-    generated_at: new Date().toISOString()
   });
 
   const renderAdminBookRow = ({ item, index }) => (
@@ -561,7 +539,7 @@ export default function ManageBooksScreen() {
         </View>
       </Modal>
 
-      {/* ===== MODAL PREVIEW QR CODE TUNED (DURASI & AKSI DINAMIS) ===== */}
+      {/* ===== MODAL PREVIEW QR CODE ===== */}
       <Modal animationType="fade" transparent={true} visible={qrModalVisible} onRequestClose={() => setQrModalVisible(false)}>
         <View style={styles.modalCenterOverlay}>
           <View style={styles.qrCardWrapper}>
@@ -572,7 +550,6 @@ export default function ManageBooksScreen() {
             </View>
             <Text style={styles.qrModalTitle} numberOfLines={2}>{activeQrData.title}</Text>
             
-            {/* 🚀 TRANSAKSI TOGGLE CONFIGURATION PANEL */}
             <View style={styles.qrConfigContainer}>
               <Text style={styles.configLabel}>Tipe Transaksi:</Text>
               <View style={styles.actionToggleRow}>
@@ -592,7 +569,6 @@ export default function ManageBooksScreen() {
                 </TouchableOpacity>
               </View>
 
-              {/* DURATION SETTING INPUT */}
               {qrActionType === 'pinjam' && (
                 <View style={styles.durationInputStyleRow}>
                   <Text style={styles.configLabel}>Durasi Peminjaman (Hari):</Text>
@@ -611,10 +587,10 @@ export default function ManageBooksScreen() {
               )}
             </View>
 
-            {/* BOX CONTAINER GENERATOR QR CODE */}
             <View style={styles.qrImageContainer}>
               <View style={styles.qrCornerTL} /><View style={styles.qrCornerTR} /><View style={styles.qrCornerBL} /><View style={styles.qrCornerBR} />
-              {activeQrData.token ? (
+              {/* 🚀 PERBAIKAN: Gambar dirender murni dari book_id yang pasti aman! */}
+              {activeQrData.id ? (
                 <Image source={{ uri: `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrStringPayload)}` }} style={styles.bigQrCodeImage} resizeMode="contain" />
               ) : null}
             </View>
@@ -777,7 +753,6 @@ const styles = StyleSheet.create({
   miniSubmitBtn: { paddingVertical: 10, paddingHorizontal: 20, borderRadius: 10, backgroundColor: colors.primary, justifyContent: 'center', alignItems: 'center', minWidth: 80 },
   miniSubmitText: { fontSize: 12, fontWeight: '800', color: '#FFFFFF' },
 
-  // STYLES: Pendukung Konfigurasi QR Code Kustom & Dinamis
   qrConfigContainer: { width: '85%', marginTop: 14, gap: 8 },
   configLabel: { fontSize: 11, fontWeight: '700', color: '#64748B', textTransform: 'uppercase', letterSpacing: 0.5 },
   actionToggleRow: { flexDirection: 'row', backgroundColor: '#F1F5F9', borderRadius: 10, padding: 4, gap: 4 },

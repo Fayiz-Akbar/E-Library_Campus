@@ -1,5 +1,5 @@
 // src/screens/student/ScanQRScreen.js
-import React, { useState, useEffect } from 'react'; // 🚀 DISUNTIK: useState & useEffect untuk antrean state
+import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -17,23 +17,11 @@ import { useQRScanner } from '../../hooks/useQRScanner';
 import { getHorizontalPadding, getResponsiveContentStyle } from '../../utils/responsive';
 
 const MODE_OPTIONS = [
-  {
-    value: TRANSACTION_MODES.BORROW,
-    label: 'Pinjam',
-    icon: 'download-outline',
-  },
-  {
-    value: TRANSACTION_MODES.RETURN,
-    label: 'Kembalikan',
-    icon: 'return-up-back-outline',
-  },
+  { value: TRANSACTION_MODES.BORROW, label: 'Pinjam', icon: 'download-outline' },
+  { value: TRANSACTION_MODES.RETURN, label: 'Kembalikan', icon: 'return-up-back-outline' },
 ];
 
-const formatCurrency = (value) => {
-  const amount = Number(value || 0);
-  return `Rp${amount.toLocaleString('id-ID')}`;
-};
-
+const formatCurrency = (value) => `Rp${Number(value || 0).toLocaleString('id-ID')}`;
 const getBookTitle = (result) => result?.book?.title || result?.transaction?.book_title || '-';
 
 export default function ScanQRScreen({ navigation }) {
@@ -42,18 +30,11 @@ export default function ScanQRScreen({ navigation }) {
   const contentStyle = getResponsiveContentStyle(width, 760);
   const horizontalPadding = getHorizontalPadding(width);
   
-  // 🚀 STATE BARU: Menampung antrean token agar tidak balapan dengan perpindahan tab
   const [pendingScan, setPendingScan] = useState(null);
 
   const {
-    mode,
-    isProcessing,
-    errorMessage,
-    successMessage,
-    lastResult,
-    handleModeChange,
-    processQrValue,
-    resetScannerState,
+    mode, isProcessing, errorMessage, successMessage, lastResult,
+    handleModeChange, processQrValue, resetScannerState,
   } = useQRScanner();
 
   const isBorrowMode = mode === TRANSACTION_MODES.BORROW;
@@ -61,39 +42,44 @@ export default function ScanQRScreen({ navigation }) {
   const hasCameraPermission = cameraPermission?.granted;
   const isCameraPermissionDenied = cameraPermission && !cameraPermission.granted && cameraPermission.canAskAgain === false;
 
-  // 🚀 EFFECT SAFETY LOCK: Tembak API hanya jika mode transaksi di HP sudah benar-benar sinkron
   useEffect(() => {
     if (pendingScan) {
       processQrValue(pendingScan);
-      setPendingScan(null); // Kosongkan antrean setelah sukses diproses
+      setPendingScan(null);
     }
   }, [mode, pendingScan]);
 
-  // 🚀 INTERSEPTOR KAMERA SCANNER
   const handleBarcodeScanned = ({ data }) => {
     if (!data || isProcessing || successMessage) return;
     
     try {
       const parsedPayload = JSON.parse(data);
       
-      if (parsedPayload && parsedPayload.token) {
+      // 🚀 SKENARIO 1: Ini QR Code kustom buatan Admin yang baru
+      if (parsedPayload.action && parsedPayload.book_id) {
         const requiredMode = parsedPayload.action === 'pinjam' ? TRANSACTION_MODES.BORROW : TRANSACTION_MODES.RETURN;
         
+        // 🚀 SULAP DATA KUNCI: Rakit ulang JSON seperti yang diwajibkan Supabase Backend!
+        const originalExpectedPayload = JSON.stringify({ type: 'ELIB_BOOK', id: parsedPayload.book_id });
+        
         if (mode === requiredMode) {
-          // A. Jika posisi tab sekarang sudah cocok dengan tipe QR, langsung eksekusi murni
-          processQrValue(parsedPayload.token);
+          processQrValue(originalExpectedPayload);
         } else {
-          // B. Jika posisi tab berbeda, amankan token ke antrean lalu paksa tab berpindah dulu
-          setPendingScan(parsedPayload.token);
+          setPendingScan(originalExpectedPayload);
           handleModeChange(requiredMode);
         }
         return;
       }
+      
+      // 🚀 SKENARIO 2: Ini QR bawaan sistem asli (Scan dari DB atau monitor lama)
+      if (parsedPayload.type === 'ELIB_BOOK') {
+         processQrValue(data); // Tembak apa adanya
+         return;
+      }
     } catch (error) {
-      console.log("Membaca QR format lama / plain text token:", data);
+      console.log("Membaca scan raw token...");
     }
 
-    // Fallback jika yang di-scan teks biasa non-JSON
     processQrValue(data);
   };
 
@@ -113,19 +99,13 @@ export default function ScanQRScreen({ navigation }) {
         <View style={styles.scannerContent}>
           <Ionicons name="camera-outline" size={52} color={colors.primary} />
           <Text style={styles.scannerTitle}>Izin Kamera Diperlukan</Text>
-          <Text style={styles.scannerText}>
-            Berikan izin kamera agar aplikasi dapat membaca QR buku secara langsung dari perangkat.
-          </Text>
+          <Text style={styles.scannerText}>Berikan izin kamera agar aplikasi dapat membaca QR buku.</Text>
           <TouchableOpacity
             style={[styles.permissionButton, isCameraPermissionDenied && styles.permissionButtonDisabled]}
-            onPress={requestCameraPermission}
-            activeOpacity={0.85}
-            disabled={isCameraPermissionDenied}
+            onPress={requestCameraPermission} activeOpacity={0.85} disabled={isCameraPermissionDenied}
           >
             <Ionicons name="camera" size={17} color="#FFFFFF" />
-            <Text style={styles.permissionButtonText}>
-              {isCameraPermissionDenied ? 'Izin Ditolak' : 'Izinkan Kamera'}
-            </Text>
+            <Text style={styles.permissionButtonText}>{isCameraPermissionDenied ? 'Izin Ditolak' : 'Izinkan Kamera'}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -134,11 +114,8 @@ export default function ScanQRScreen({ navigation }) {
     return (
       <>
         <CameraView
-          style={styles.camera}
-          facing="back"
-          barcodeScannerSettings={{
-            barcodeTypes: ['qr', 'ean13', 'ean8', 'code128', 'code39'],
-          }}
+          style={styles.camera} facing="back"
+          barcodeScannerSettings={{ barcodeTypes: ['qr', 'ean13', 'ean8', 'code128', 'code39'] }}
           onBarcodeScanned={isProcessing || successMessage ? undefined : handleBarcodeScanned}
         />
         <View style={styles.cameraOverlay}>
@@ -150,21 +127,14 @@ export default function ScanQRScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingHorizontal: horizontalPadding }]}>
         <View style={[styles.header, contentStyle]}>
           <View>
             <Text style={styles.eyebrow}>Transaksi Buku</Text>
             <Text style={styles.title}>Scan QR</Text>
-            <Text style={styles.subtitle}>
-              Langsung arahkan kamera ke QR kustom dari Admin. Sistem otomatis menyinkronkan data peminjaman & pengembalian buku.
-            </Text>
+            <Text style={styles.subtitle}>Sistem otomatis menyinkronkan data peminjaman & pengembalian buku.</Text>
           </View>
-          <View style={styles.headerIcon}>
-            <Ionicons name="scan" size={28} color="#FFFFFF" />
-          </View>
+          <View style={styles.headerIcon}><Ionicons name="scan" size={28} color="#FFFFFF" /></View>
         </View>
 
         <View style={[styles.section, contentStyle]}>
@@ -172,31 +142,17 @@ export default function ScanQRScreen({ navigation }) {
             {MODE_OPTIONS.map((option) => {
               const active = option.value === mode;
               return (
-                <TouchableOpacity
-                  key={option.value}
-                  style={[styles.modeButton, active && styles.modeButtonActive]}
-                  onPress={() => handleModeChange(option.value)}
-                  activeOpacity={0.8}
-                  disabled={isProcessing}
-                >
-                  <Ionicons
-                    name={option.icon}
-                    size={18}
-                    color={active ? colors.textOnPrimary : colors.primary}
-                  />
-                  <Text style={[styles.modeText, active && styles.modeTextActive]}>
-                    {option.label}
-                  </Text>
+                <TouchableOpacity key={option.value} style={[styles.modeButton, active && styles.modeButtonActive]} onPress={() => handleModeChange(option.value)} activeOpacity={0.8} disabled={isProcessing}>
+                  <Ionicons name={option.icon} size={18} color={active ? colors.textOnPrimary : colors.primary} />
+                  <Text style={[styles.modeText, active && styles.modeTextActive]}>{option.label}</Text>
                 </TouchableOpacity>
               );
             })}
           </View>
 
           <View style={styles.scannerFrame}>
-            <View style={[styles.corner, styles.cornerTopLeft]} />
-            <View style={[styles.corner, styles.cornerTopRight]} />
-            <View style={[styles.corner, styles.cornerBottomLeft]} />
-            <View style={[styles.corner, styles.cornerBottomRight]} />
+            <View style={[styles.corner, styles.cornerTopLeft]} /><View style={[styles.corner, styles.cornerTopRight]} />
+            <View style={[styles.corner, styles.cornerBottomLeft]} /><View style={[styles.corner, styles.cornerBottomRight]} />
             {renderCameraArea()}
           </View>
         </View>
@@ -210,24 +166,13 @@ export default function ScanQRScreen({ navigation }) {
 
         {successMessage ? (
           <View style={[styles.successCard, contentStyle]}>
-            <View style={styles.successIcon}>
-              <Ionicons name="checkmark" size={24} color="#FFFFFF" />
-            </View>
+            <View style={styles.successIcon}><Ionicons name="checkmark" size={24} color="#FFFFFF" /></View>
             <Text style={styles.successTitle}>{successMessage}</Text>
             <View style={styles.resultList}>
-              <View style={styles.resultRow}>
-                <Text style={styles.resultLabel}>Buku</Text>
-                <Text style={styles.resultValue} numberOfLines={2}>{getBookTitle(lastResult)}</Text>
-              </View>
-              <View style={styles.resultRow}>
-                <Text style={styles.resultLabel}>Status</Text>
-                <Text style={styles.resultValue}>{lastResult?.transaction?.status || '-'}</Text>
-              </View>
+              <View style={styles.resultRow}><Text style={styles.resultLabel}>Buku</Text><Text style={styles.resultValue} numberOfLines={2}>{getBookTitle(lastResult)}</Text></View>
+              <View style={styles.resultRow}><Text style={styles.resultLabel}>Status</Text><Text style={styles.resultValue}>{lastResult?.transaction?.status || '-'}</Text></View>
               {!isBorrowMode ? (
-                <View style={styles.resultRow}>
-                  <Text style={styles.resultLabel}>Denda</Text>
-                  <Text style={styles.resultValue}>{formatCurrency(fineAmount)}</Text>
-                </View>
+                <View style={styles.resultRow}><Text style={styles.resultLabel}>Denda</Text><Text style={styles.resultValue}>{formatCurrency(fineAmount)}</Text></View>
               ) : null}
             </View>
             <View style={styles.successActions}>
