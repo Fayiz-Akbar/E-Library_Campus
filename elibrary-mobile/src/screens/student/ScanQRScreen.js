@@ -5,7 +5,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
   useWindowDimensions,
@@ -44,9 +43,6 @@ export default function ScanQRScreen({ navigation }) {
   const horizontalPadding = getHorizontalPadding(width);
   const {
     mode,
-    modeLabel,
-    qrInput,
-    setQrInput,
     isProcessing,
     errorMessage,
     successMessage,
@@ -57,7 +53,6 @@ export default function ScanQRScreen({ navigation }) {
   } = useQRScanner();
 
   const isBorrowMode = mode === TRANSACTION_MODES.BORROW;
-  const actionLabel = isBorrowMode ? 'Proses Peminjaman' : 'Proses Pengembalian';
   const fineAmount = lastResult?.fine?.amount || lastResult?.fine?.fineAmount || lastResult?.transaction?.fine_amount || 0;
   const hasCameraPermission = cameraPermission?.granted;
   const isCameraPermissionDenied = cameraPermission && !cameraPermission.granted && cameraPermission.canAskAgain === false;
@@ -89,29 +84,6 @@ export default function ScanQRScreen({ navigation }) {
 
     // Eksekusi default jika lolos dari pengecekan JSON
     processQrValue(data);
-  };
-
-  // 🚀 REVISI KEDUA: Interseptor Input Manual (Jaga-jaga kalau mahasiswa copas mentah string JSON Admin)
-  const handleManualSubmit = () => {
-    const trimmedInput = qrInput.trim();
-    if (!trimmedInput || isProcessing) return;
-
-    try {
-      const parsedPayload = JSON.parse(trimmedInput);
-      if (parsedPayload && parsedPayload.token) {
-        if (parsedPayload.action === 'pinjam' && mode !== TRANSACTION_MODES.BORROW) {
-          handleModeChange(TRANSACTION_MODES.BORROW);
-        } else if (parsedPayload.action === 'kembali' && mode !== TRANSACTION_MODES.RETURN) {
-          handleModeChange(TRANSACTION_MODES.RETURN);
-        }
-        processQrValue(parsedPayload.token);
-        return;
-      }
-    } catch (error) {
-      // Abaikan jika input manual berupa teks biasa
-    }
-
-    processQrValue(trimmedInput);
   };
 
   const renderCameraArea = () => {
@@ -176,7 +148,7 @@ export default function ScanQRScreen({ navigation }) {
             <Text style={styles.eyebrow}>Transaksi Buku</Text>
             <Text style={styles.title}>Scan QR</Text>
             <Text style={styles.subtitle}>
-              Pilih mode transaksi, atau langsung scan QR kustom dari Admin untuk memproses data ke cloud backend.
+              Pilih mode transaksi, atau langsung arahkan kamera ke QR kustom dari Admin untuk memproses transaksi.
             </Text>
           </View>
           <View style={styles.headerIcon}>
@@ -215,39 +187,6 @@ export default function ScanQRScreen({ navigation }) {
             <View style={[styles.corner, styles.cornerBottomLeft]} />
             <View style={[styles.corner, styles.cornerBottomRight]} />
             {renderCameraArea()}
-          </View>
-
-          <View style={styles.manualBox}>
-            <Text style={styles.inputLabel}>Input manual QR/barcode buku</Text>
-            <TextInput
-              value={qrInput}
-              onChangeText={setQrInput}
-              placeholder="Contoh: BOOK-QR-TOKEN atau copas payload JSON QR"
-              placeholderTextColor="#94A3B8"
-              style={styles.input}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!isProcessing}
-              multiline
-            />
-            <TouchableOpacity
-              style={[
-                styles.primaryButton,
-                (!qrInput.trim() || isProcessing) && styles.primaryButtonDisabled,
-              ]}
-              onPress={handleManualSubmit}
-              activeOpacity={0.85}
-              disabled={!qrInput.trim() || isProcessing}
-            >
-              {isProcessing ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
-              ) : (
-                <>
-                  <Ionicons name={isBorrowMode ? 'download' : 'return-up-back'} size={18} color="#FFFFFF" />
-                  <Text style={styles.primaryButtonText}>{actionLabel}</Text>
-                </>
-              )}
-            </TouchableOpacity>
           </View>
         </View>
 
@@ -381,7 +320,7 @@ const styles = StyleSheet.create({
   },
   scannerFrame: {
     marginTop: 16,
-    minHeight: 260,
+    minHeight: 280,
     borderRadius: 16,
     backgroundColor: '#FAFAFF',
     borderWidth: 1,
@@ -483,46 +422,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 4,
     borderRightWidth: 4,
     borderBottomRightRadius: 10,
-  },
-  manualBox: {
-    marginTop: 16,
-  },
-  inputLabel: {
-    color: colors.textPrimary,
-    fontSize: 13,
-    fontWeight: '800',
-    marginBottom: 8,
-  },
-  input: {
-    minHeight: 92,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    color: colors.textPrimary,
-    fontSize: 14,
-    lineHeight: 20,
-    textAlignVertical: 'top',
-    backgroundColor: '#FFFFFF',
-  },
-  primaryButton: {
-    marginTop: 12,
-    minHeight: 50,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  primaryButtonDisabled: {
-    backgroundColor: '#CBD5E1',
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '900',
   },
   feedbackBox: {
     marginTop: 14,

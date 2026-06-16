@@ -173,7 +173,7 @@ export default function ManageBooksScreen() {
 
   const handleSaveBook = async () => {
     if (!form.title || !form.author || !form.stock) {
-      showAlert('Peringatan', 'Judul, Penulis, dan Jumlah Stok wajib diisi, Bree!');
+      showAlert('Peringatan ', 'Judul, Penulis, dan Jumlah Stok wajib diisi, Bree!');
       return;
     }
 
