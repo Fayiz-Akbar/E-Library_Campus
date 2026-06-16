@@ -219,14 +219,14 @@ export default function ManageBooksScreen() {
       try {
         const res = await adminDeleteBook(book.id);
         if (res.success) {
-          showAlert('Terhapus 🗑️', res.message || 'Buku berhasil dimusnahkan.');
+          showAlert('Terhapus ', res.message || 'Buku berhasil dimusnahkan.');
           loadAdminCatalog(); 
         } else {
-          showAlert('Gagal ⚠️', res.message || 'Gagal menghapus buku.');
+          showAlert('Gagal ', res.message || 'Gagal menghapus buku.');
         }
       } catch (err) {
         const serverMessage = err.response?.data?.message || 'Gagal menghapus buku dari server. Periksa hak akses Admin Anda.';
-        showAlert('Error Hapus ❌', serverMessage);
+        showAlert('Error Hapus ', serverMessage);
       }
     };
 
