@@ -10,6 +10,20 @@ Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
 
 Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
 
+## 2026-06-15 19:45 WIB - Fix Mobile Scan QR Buku Tidak Ditemukan
+
+### Fixed
+
+- Memperbaiki penyebab scan QR dari HP mengembalikan `404 Buku tidak ditemukan`.
+- Mengubah generator QR agar menyimpan payload scan JSON yang stabil, bukan QR image base64.
+- Memperbaiki `bookModel.updateBook` agar field `qr_code` benar-benar tersimpan saat create/update buku.
+- Menambahkan auto-generate QR untuk buku lama yang belum punya `qr_code` saat diedit ulang.
+- Menormalisasi hasil scan QR dengan `trim` sebelum dicari di database transaksi.
+
+### Documentation
+
+- Menambahkan dokumentasi perbaikan di `docs/learn and fix bug/mobile-scan-qr-book-not-found.md`.
+
 ## 2026-06-15 18:19 WIB - Person 3 Dashboard Admin
 
 ### Added
