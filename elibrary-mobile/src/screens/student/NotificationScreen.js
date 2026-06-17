@@ -27,6 +27,30 @@ const formatDate = (value) => {
 const formatCurrency = (value) => `Rp${Number(value || 0).toLocaleString('id-ID')}`;
 
 const getNotificationMeta = (item) => {
+  if (item.notification_type === 'borrow_success') {
+    return {
+      title: 'Peminjaman berhasil',
+      message: 'Transaksi peminjaman buku berhasil tercatat. Simpan buku dengan baik dan kembalikan sebelum jatuh tempo.',
+      color: colors.success,
+      background: '#ECFDF5',
+      icon: 'checkmark-circle-outline',
+      dateLabel: 'Jatuh tempo',
+      showReturnAction: true,
+    };
+  }
+
+  if (item.notification_type === 'return_success') {
+    return {
+      title: 'Pengembalian berhasil',
+      message: `Buku berhasil dikembalikan. Denda akhir: ${formatCurrency(item.fine_amount)}.`,
+      color: colors.success,
+      background: '#ECFDF5',
+      icon: 'checkmark-done-circle-outline',
+      dateLabel: 'Dikembalikan',
+      showReturnAction: false,
+    };
+  }
+
   if (item.notification_type === 'overdue') {
     return {
       title: 'Buku terlambat dikembalikan',
@@ -34,16 +58,23 @@ const getNotificationMeta = (item) => {
       color: colors.danger,
       background: '#FEF2F2',
       icon: 'alert-circle-outline',
+      dateLabel: 'Jatuh tempo',
+      showReturnAction: true,
     };
   }
 
-  const dayText = item.days_until_due <= 0 ? 'hari ini' : `${item.days_until_due} hari lagi`;
+  const hourText = item.hours_until_due <= 0
+    ? 'hari ini'
+    : `${item.hours_until_due} jam lagi`;
+
   return {
     title: 'Buku mendekati jatuh tempo',
-    message: `Jatuh tempo ${dayText}. Kembalikan tepat waktu agar tidak terkena denda.`,
+    message: `Jatuh tempo ${hourText}. Kembalikan tepat waktu agar tidak terkena denda.`,
     color: colors.warning,
     background: '#FFFBEB',
     icon: 'notifications-outline',
+    dateLabel: 'Jatuh tempo',
+    showReturnAction: true,
   };
 };
 
@@ -59,11 +90,15 @@ const NotificationItem = ({ item, onReturnPress }) => {
         <Text style={styles.notificationTitle}>{meta.title}</Text>
         <Text style={styles.bookTitle} numberOfLines={2}>{item.title || 'Judul buku tidak tersedia'}</Text>
         <Text style={styles.notificationMessage}>{meta.message}</Text>
-        <Text style={styles.dueDate}>Jatuh tempo: {formatDate(item.due_date)}</Text>
-        <TouchableOpacity style={styles.returnButton} onPress={onReturnPress} activeOpacity={0.85}>
-          <Ionicons name="scan-outline" size={16} color="#FFFFFF" />
-          <Text style={styles.returnButtonText}>Scan Pengembalian</Text>
-        </TouchableOpacity>
+        <Text style={styles.dueDate}>
+          {meta.dateLabel}: {formatDate(item.notification_type === 'return_success' ? item.return_date : item.due_date)}
+        </Text>
+        {meta.showReturnAction ? (
+          <TouchableOpacity style={styles.returnButton} onPress={onReturnPress} activeOpacity={0.85}>
+            <Ionicons name="scan-outline" size={16} color="#FFFFFF" />
+            <Text style={styles.returnButtonText}>Scan Pengembalian</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
     </View>
   );
@@ -98,7 +133,7 @@ export default function NotificationScreen({ navigation }) {
           <View style={styles.headerText}>
             <Text style={styles.eyebrow}>Reminder</Text>
             <Text style={styles.title}>Notifikasi</Text>
-            <Text style={styles.subtitle}>Daftar buku yang akan jatuh tempo atau sudah terlambat.</Text>
+            <Text style={styles.subtitle}>Reminder jatuh tempo, keterlambatan, dan aktivitas transaksi.</Text>
           </View>
         </View>
 
@@ -119,14 +154,14 @@ export default function NotificationScreen({ navigation }) {
         {!notificationLoading && notifications.length === 0 && !notificationError ? (
           <View style={[styles.centerState, contentStyle]}>
             <Ionicons name="notifications-off-outline" size={42} color={colors.primaryLight} />
-            <Text style={styles.emptyTitle}>Tidak ada notifikasi jatuh tempo.</Text>
-            <Text style={styles.emptyText}>Buku yang mendekati jatuh tempo atau terlambat akan tampil di sini.</Text>
+            <Text style={styles.emptyTitle}>Tidak ada notifikasi.</Text>
+            <Text style={styles.emptyText}>Reminder jatuh tempo dan aktivitas pinjam/kembali akan tampil di sini.</Text>
           </View>
         ) : null}
 
         <View style={[styles.list, contentStyle]}>
           {notifications.map((item) => (
-            <NotificationItem key={String(item.id)} item={item} onReturnPress={goToScanReturn} />
+            <NotificationItem key={String(item.notification_id || item.id)} item={item} onReturnPress={goToScanReturn} />
           ))}
         </View>
       </ScrollView>

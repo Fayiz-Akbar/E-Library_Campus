@@ -10,6 +10,16 @@ Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
 
 Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
 
+## 2026-06-17 09:36 WIB - Update Notifikasi 24 Jam dan Aktivitas Transaksi
+
+### Changed
+
+- Mengubah ambang notifikasi jatuh tempo dari 2 hari menjadi 24 jam sebelum deadline.
+- Memperluas endpoint `GET /api/transactions/notifications` agar menampilkan notifikasi keberhasilan peminjaman dalam 24 jam terakhir.
+- Memperluas endpoint `GET /api/transactions/notifications` agar menampilkan notifikasi keberhasilan pengembalian dalam 24 jam terakhir.
+- Memperbarui tampilan `NotificationScreen` agar mendukung tipe notifikasi `borrow_success` dan `return_success`.
+- Memperbarui dokumentasi `docs/person3-history-notification.md`.
+
 ## 2026-06-15 19:45 WIB - Fix Mobile Scan QR Buku Tidak Ditemukan
 
 ### Fixed

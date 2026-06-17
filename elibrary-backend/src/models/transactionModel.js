@@ -6,7 +6,8 @@ const DEFAULT_BORROW_DAYS = 7;
 const HISTORY_STATUSES = ['borrowed', 'returned', 'overdue', 'lost', 'damaged'];
 const ADMIN_TRANSACTION_STATUSES = ['borrowed', 'returned', 'overdue', 'lost', 'damaged'];
 const OVERRIDE_STATUSES = ['returned', 'lost', 'damaged'];
-const DUE_SOON_DAYS = 2;
+const DUE_SOON_HOURS = 24;
+const RECENT_TRANSACTION_NOTIFICATION_HOURS = 24;
 
 const parsePositiveInteger = (value) => {
   const parsed = Number.parseInt(value, 10);
@@ -345,7 +346,7 @@ const getUserHistory = async ({ requestedUserId, requester, status }) => {
   const statusFilter = buildHistoryStatusFilter(status);
   const queryValues = [targetUserId, ...statusFilter.values];
 
-  const result = await db.query(
+  const dueReminderResult = await db.query(
     `
       SELECT
         t.id,
@@ -406,27 +407,87 @@ const getUserDueNotifications = async ({ requester }) => {
       JOIN books b ON b.id = t.book_id
       WHERE t.user_id = $1
         AND t.status = ANY($2)
-        AND t.due_date <= CURRENT_TIMESTAMP + ($3 * INTERVAL '1 day')
+        AND t.due_date <= CURRENT_TIMESTAMP + ($3 * INTERVAL '1 hour')
       ORDER BY t.due_date ASC
     `,
-    [requesterId, ACTIVE_TRANSACTION_STATUSES, DUE_SOON_DAYS]
+    [requesterId, ACTIVE_TRANSACTION_STATUSES, DUE_SOON_HOURS]
+  );
+
+  const recentTransactionResult = await db.query(
+    `
+      SELECT
+        t.id,
+        t.user_id,
+        t.book_id,
+        t.borrow_date,
+        t.due_date,
+        t.return_date,
+        t.fine_amount,
+        ${getDisplayStatusSql()} AS status,
+        t.status AS raw_status,
+        b.title,
+        b.author,
+        b.cover_image,
+        b.publisher,
+        b.isbn,
+        CASE
+          WHEN t.status = 'returned' THEN 'return_success'
+          ELSE 'borrow_success'
+        END AS notification_type,
+        CASE
+          WHEN t.status = 'returned' THEN COALESCE(t.return_date, t.updated_at)
+          ELSE t.created_at
+        END AS event_date
+      FROM transactions t
+      JOIN books b ON b.id = t.book_id
+      WHERE t.user_id = $1
+        AND (
+          (
+            t.status = 'borrowed'
+            AND t.created_at >= CURRENT_TIMESTAMP - ($2 * INTERVAL '1 hour')
+          )
+          OR (
+            t.status = 'returned'
+            AND COALESCE(t.return_date, t.updated_at) >= CURRENT_TIMESTAMP - ($2 * INTERVAL '1 hour')
+          )
+        )
+      ORDER BY event_date DESC
+    `,
+    [requesterId, RECENT_TRANSACTION_NOTIFICATION_HOURS]
   );
 
   const now = new Date();
 
-  return result.rows.map((transaction) => {
+  const dueNotifications = dueReminderResult.rows.map((transaction) => {
     const dueDate = new Date(transaction.due_date);
-    const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const diffHours = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60));
     const fine = calculateFine(transaction.due_date, now);
     const isOverdue = transaction.status === 'overdue';
 
     return {
       ...transaction,
+      notification_id: `${isOverdue ? 'overdue' : 'due_soon'}-${transaction.id}`,
       notification_type: isOverdue ? 'overdue' : 'due_soon',
-      days_until_due: diffDays,
+      hours_until_due: diffHours,
+      days_until_due: Math.ceil(diffHours / 24),
       late_days: fine.lateDays,
       estimated_fine_amount: fine.fineAmount,
     };
+  });
+
+  const recentTransactionNotifications = recentTransactionResult.rows.map((transaction) => ({
+    ...transaction,
+    notification_id: `${transaction.notification_type}-${transaction.id}`,
+    hours_until_due: null,
+    days_until_due: null,
+    late_days: 0,
+    estimated_fine_amount: Number(transaction.fine_amount) || 0,
+  }));
+
+  return [...dueNotifications, ...recentTransactionNotifications].sort((a, b) => {
+    const dateA = new Date(a.event_date || a.due_date || a.created_at).getTime();
+    const dateB = new Date(b.event_date || b.due_date || b.created_at).getTime();
+    return dateB - dateA;
   });
 };
 

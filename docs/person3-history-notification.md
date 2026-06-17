@@ -32,7 +32,8 @@ Status implementasi branch saat ini:
 - Filter riwayat `Semua`, `Dipinjam`, `Dikembalikan`, dan `Terlambat` sudah aktif.
 - Endpoint `GET /api/transactions/history/:user_id` sudah mendukung query `status`.
 - Endpoint `GET /api/transactions/notifications` sudah tersedia.
-- Notifikasi menampilkan transaksi aktif yang terlambat atau akan jatuh tempo dalam 2 hari.
+- Notifikasi menampilkan transaksi aktif yang terlambat atau akan jatuh tempo dalam 24 jam.
+- Notifikasi juga menampilkan aktivitas peminjaman dan pengembalian yang berhasil dalam 24 jam terakhir.
 
 ## Branch Dependency
 
@@ -107,9 +108,11 @@ Authorization: Bearer <token>
 
 Data yang dikembalikan:
 
-- Buku yang akan jatuh tempo dalam 1-2 hari.
+- Buku yang akan jatuh tempo dalam 24 jam.
 - Buku yang sudah terlambat.
 - Nominal denda sementara jika overdue.
+- Aktivitas peminjaman yang berhasil.
+- Aktivitas pengembalian yang berhasil.
 
 ## Flow Riwayat
 
@@ -128,10 +131,12 @@ Data yang dikembalikan:
 1. User membuka halaman Notifikasi.
 2. Aplikasi mengambil transaksi aktif.
 3. Sistem menandai transaksi:
-   - Akan jatuh tempo.
+   - Akan jatuh tempo dalam 24 jam.
    - Terlambat.
-4. User melihat pesan reminder.
-5. User bisa menuju detail riwayat atau scan pengembalian.
+   - Berhasil dipinjam.
+   - Berhasil dikembalikan.
+4. User melihat pesan reminder atau aktivitas transaksi.
+5. User bisa menuju scan pengembalian untuk buku yang masih aktif.
 
 ## Aturan Status Tampilan
 

@@ -52,7 +52,8 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 - Transaction return API.
 - User transaction history API.
 - User transaction history filter by status.
-- User due date notification API.
+- User due date notification API dengan ambang 24 jam sebelum deadline.
+- User transaction activity notification API untuk peminjaman/pengembalian berhasil.
 - Admin all transactions API.
 - Admin transaction override API.
 - Admin transaction report API.
@@ -80,7 +81,7 @@ Catatan: IP ini adalah IP Wi-Fi laptop saat konteks dibuat. Jika jaringan beruba
 - Borrow API sudah mengarah ke `/api/transactions/borrow`.
 - Student tab `Scan QR` aktif dengan kamera perangkat melalui `expo-camera`.
 - Student tab `Riwayat` aktif dengan filter Semua, Dipinjam, Dikembalikan, dan Terlambat.
-- Screen `Notification` aktif untuk reminder jatuh tempo dan keterlambatan.
+- Screen `Notification` aktif untuk reminder jatuh tempo 24 jam, keterlambatan, dan aktivitas pinjam/kembali berhasil.
 - Admin tab `Transaksi` aktif untuk list, filter, search, detail, dan override status transaksi.
 - Admin tab `Laporan` aktif untuk preview laporan periode dan export CSV.
 - Admin tab `Dashboard` aktif untuk statistik gabungan user, buku, dan transaksi.
