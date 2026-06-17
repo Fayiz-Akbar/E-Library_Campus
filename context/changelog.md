@@ -10,6 +10,13 @@ Mulai perubahan ini, setiap entri changelog baru wajib menggunakan format:
 
 Catatan: entri lama yang sebelumnya tidak mencatat waktu diberi `00:00 WIB` sebagai placeholder historis.
 
+## 2026-06-17 10:08 WIB - Fix Expo Status Bar Plugin Config
+
+### Fixed
+
+- Menghapus `expo-status-bar` dari `plugins` di `elibrary-mobile/app.json` karena package tersebut bukan config plugin Expo.
+- Memastikan `npx expo install --check` kembali bersih setelah downgrade/penyesuaian dependency Expo SDK 54.
+
 ## 2026-06-17 09:36 WIB - Update Notifikasi 24 Jam dan Aktivitas Transaksi
 
 ### Changed
