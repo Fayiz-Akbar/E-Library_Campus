@@ -346,7 +346,8 @@ const getUserHistory = async ({ requestedUserId, requester, status }) => {
   const statusFilter = buildHistoryStatusFilter(status);
   const queryValues = [targetUserId, ...statusFilter.values];
 
-  const dueReminderResult = await db.query(
+  // 🚀 PERBAIKAN 1: Nama variabel dikembalikan menjadi 'result' agar klop dengan 'return result.rows' di bawah!
+  const result = await db.query(
     `
       SELECT
         t.id,
@@ -386,7 +387,8 @@ const getUserDueNotifications = async ({ requester }) => {
     throw error;
   }
 
-  const result = await db.query(
+  // 🚀 PERBAIKAN 2: Nama variabel diubah menjadi 'dueReminderResult' agar klop dengan loop map di bawah!
+  const dueReminderResult = await db.query(
     `
       SELECT
         t.id,
