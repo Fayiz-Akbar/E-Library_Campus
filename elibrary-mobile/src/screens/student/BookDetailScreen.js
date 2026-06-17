@@ -1,9 +1,8 @@
 // src/screens/student/BookDetailScreen.js
 import React from 'react';
-import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, StatusBar, ActivityIndicator, Alert, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, Image, TouchableOpacity, StatusBar, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../constants/colors';
-import { useBorrow } from '../../hooks/useBorrow';
 import { getResponsiveContentStyle } from '../../utils/responsive';
 
 const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002ed7e?w=400&q=80';
@@ -11,121 +10,81 @@ const PLACEHOLDER_COVER = 'https://images.unsplash.com/photo-1543002588-bfa74002
 export default function BookDetailScreen({ route, navigation }) {
   const { width } = useWindowDimensions();
   const { book } = route.params;
-  const { borrowLoading, borrowError, handleBorrowSubmit } = useBorrow();
   const contentStyle = getResponsiveContentStyle(width, 760);
   const coverWidth = Math.min(320, Math.max(190, width * 0.42));
   const coverHeight = coverWidth * 1.38;
   
   const isAvailable = book.available_stock > 0;
 
-  const onBorrowPress = () => {
-    Alert.alert(
-      'Konfirmasi Pinjam',
-      `Apakah kamu yakin ingin mengajukan peminjaman buku "${book.title}"?`,
-      [
-        { text: 'Batal', style: 'cancel' },
-        {
-          text: 'Ya, Pinjam',
-          onPress: () => {
-            handleBorrowSubmit(book, (successMessage) => {
-              Alert.alert('Sukses 🎉', successMessage, [
-                { text: 'OK', onPress: () => navigation.navigate('Home') }
-              ]);
-            });
-          }
-        }
-      ]
-    );
-  };
-
   return (
     <View style={styles.container}>
       <StatusBar barStyle="dark-content" translucent={true} backgroundColor="transparent" />
 
+      {/* ===== TOP NAVBAR ===== */}
       <View style={styles.topNavbar}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} activeOpacity={0.7}>
           <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.navbarTitle} numberOfLines={1}>Detail Buku</Text>
+        <Text style={styles.navbarTitle} numberOfLines={1}>Detail Informasi Buku</Text>
         <View style={{ width: 44 }} />
       </View>
 
+      {/* ===== MAIN CONTENT ===== */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollPadding}>
         <View style={[styles.detailContent, contentStyle]}>
-        <View style={styles.coverSection}>
-          <View style={[styles.imageShadowBox, { width: coverWidth, height: coverHeight }]}>
-            <Image source={{ uri: book.cover_image || PLACEHOLDER_COVER }} style={styles.mainCoverImage} resizeMode="cover" />
-          </View>
-        </View>
-
-        <View style={styles.infoSection}>
-          <Text style={styles.bookAuthor}>{book.author ? book.author.toUpperCase() : 'UNKNOWN'}</Text>
-          <Text style={styles.bookTitle}>{book.title}</Text>
-          <View style={styles.metaBadgeRow}>
-            <View style={styles.publisherBadge}>
-              <Ionicons name="business" size={12} color={colors.primary} style={{ marginRight: 4 }} />
-              <Text style={styles.publisherText}>{book.publisher || 'Perpustakaan Utama'}</Text>
-            </View>
-            <View style={[styles.stockBadge, isAvailable ? styles.bgSuccess : styles.bgDanger]}>
-              <Text style={isAvailable ? styles.textSuccess : styles.textDanger}>
-                {isAvailable ? `${book.available_stock} Tersedia` : 'Stok Habis'}
-              </Text>
+          
+          {/* SAMPUL BUKU */}
+          <View style={styles.coverSection}>
+            <View style={[styles.imageShadowBox, { width: coverWidth, height: coverHeight }]}>
+              <Image source={{ uri: book.cover_image || PLACEHOLDER_COVER }} style={styles.mainCoverImage} resizeMode="cover" />
             </View>
           </View>
-        </View>
 
-        {borrowError ? (
-          <View style={styles.errorBanner}>
-            <Ionicons name="alert-circle" size={16} color={colors.danger} style={{ marginRight: 6 }} />
-            <Text style={styles.errorBannerText}>{borrowError}</Text>
+          {/* DETAIL UTAMA */}
+          <View style={styles.infoSection}>
+            <Text style={styles.bookAuthor}>{book.author ? book.author.toUpperCase() : 'UNKNOWN'}</Text>
+            <Text style={styles.bookTitle}>{book.title}</Text>
+            <View style={styles.metaBadgeRow}>
+              <View style={styles.publisherBadge}>
+                <Ionicons name="business" size={12} color={colors.primary} style={{ marginRight: 4 }} />
+                <Text style={styles.publisherText}>{book.publisher || 'Perpustakaan Utama'}</Text>
+              </View>
+              <View style={[styles.stockBadge, isAvailable ? styles.bgSuccess : styles.bgDanger]}>
+                <Text style={isAvailable ? styles.textSuccess : styles.textDanger}>
+                  {isAvailable ? `${book.available_stock} Tersedia` : 'Stok Habis'}
+                </Text>
+              </View>
+            </View>
           </View>
-        ) : null}
 
-        <View style={styles.metricsBar}>
-          <View style={styles.metricItem}>
-            <Text style={styles.metricValue}>ISBN</Text>
-            <Text style={styles.metricLabel} numberOfLines={1}>{book.isbn ? book.isbn.substring(0, 6) : '-'}</Text>
+          {/* BAR METRIKS SPESIFIKASI */}
+          <View style={styles.metricsBar}>
+            <View style={styles.metricItem}>
+              <Text style={styles.metricValue}>ISBN</Text>
+              <Text style={styles.metricLabel} numberOfLines={1}>{book.isbn ? book.isbn.substring(0, 13) : '-'}</Text>
+            </View>
+            <View style={styles.metricDivider} />
+            <View style={styles.metricItem}>
+              <Text style={styles.metricValue}>Bahasa</Text>
+              <Text style={styles.metricLabel}>Indonesia</Text>
+            </View>
+            <View style={styles.metricDivider} />
+            <View style={styles.metricItem}>
+              <Text style={styles.metricValue}>Kondisi</Text>
+              <Text style={styles.metricLabel}>Baik</Text>
+            </View>
           </View>
-          <View style={styles.metricDivider} />
-          <View style={styles.metricItem}>
-            <Text style={styles.metricValue}>Bahasa</Text>
-            <Text style={styles.metricLabel}>Indonesia</Text>
-          </View>
-          <View style={styles.metricDivider} />
-          <View style={styles.metricItem}>
-            <Text style={styles.metricValue}>Kondisi</Text>
-            <Text style={styles.metricLabel}>Baik</Text>
-          </View>
-        </View>
 
-        <View style={styles.synopsisSection}>
-          <Text style={styles.sectionTitle}>Sinopsis Buku</Text>
-          <Text style={styles.synopsisParagraph}>
-            {book.summary || 'Tidak ada sinopsis atau ringkasan deskripsi yang tersedia untuk katalog buku ini, Bree.'}
-          </Text>
-        </View>
+          {/* SINOPSIS */}
+          <View style={styles.synopsisSection}>
+            <Text style={styles.sectionTitle}>Sinopsis Buku</Text>
+            <Text style={styles.synopsisParagraph}>
+              {book.summary || 'Tidak ada sinopsis atau ringkasan deskripsi yang tersedia untuk katalog buku ini, Bree.'}
+            </Text>
+          </View>
+          
         </View>
       </ScrollView>
-
-      <View style={styles.bottomActionBar}>
-        <TouchableOpacity 
-          style={[styles.primaryActionBtn, contentStyle, (!isAvailable || borrowLoading) && styles.disabledActionBtn]} 
-          disabled={!isAvailable || borrowLoading}
-          onPress={onBorrowPress}
-          activeOpacity={0.8}
-        >
-          {borrowLoading ? (
-            <ActivityIndicator size="small" color="#FFFFFF" />
-          ) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="swap-horizontal" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
-              <Text style={styles.actionBtnText}>
-                {isAvailable ? 'Ajukan Peminjaman Sekarang' : 'Koleksi Sedang Dipinjam'}
-              </Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -135,7 +94,10 @@ const styles = StyleSheet.create({
   topNavbar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 60, paddingHorizontal: 20, paddingBottom: 16, backgroundColor: '#FFFFFF', borderBottomWidth: 1, borderColor: '#F4F1FE' },
   backButton: { backgroundColor: '#F8FAFC', padding: 10, borderRadius: 12, borderWidth: 1, borderColor: '#E2E8F0' },
   navbarTitle: { fontSize: 16, fontWeight: '800', color: colors.textPrimary, flex: 1, textAlign: 'center', marginLeft: 22 },
-  scrollPadding: { paddingBottom: 120 },
+  
+  // Jarak bawah disesuaikan menjadi lebih pendek (40) karena bottom action bar sudah dimusnahkan
+  scrollPadding: { paddingBottom: 40 }, 
+  
   detailContent: { alignSelf: 'center' },
   coverSection: { alignItems: 'center', marginTop: 24, marginBottom: 20 },
   imageShadowBox: { borderRadius: 24, backgroundColor: '#F1F5F9', elevation: 12, shadowColor: colors.primary, shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.18, shadowRadius: 14 },
@@ -158,11 +120,5 @@ const styles = StyleSheet.create({
   metricDivider: { width: 1, height: '70%', backgroundColor: '#E2E8F0', alignSelf: 'center' },
   synopsisSection: { paddingHorizontal: 24, marginTop: 28 },
   sectionTitle: { fontSize: 15, fontWeight: '800', color: colors.textPrimary, marginBottom: 8 },
-  synopsisParagraph: { fontSize: 13, color: colors.textSecondary, lineHeight: 22, textAlign: 'justify', fontWeight: '500' },
-  bottomActionBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#FFFFFF', paddingHorizontal: 24, paddingTop: 16, paddingBottom: 34, borderTopWidth: 1, borderColor: '#F4F1FE' },
-  primaryActionBtn: { backgroundColor: colors.primary, borderRadius: 16, height: 52, flexDirection: 'row', justifyContent: 'center', alignItems: 'center', elevation: 4, shadowColor: colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 6 },
-  disabledActionBtn: { backgroundColor: '#CBD5E1', shadowOpacity: 0 },
-  actionBtnText: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
-  errorBanner: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FEE2E2', marginHorizontal: 24, marginTop: 16, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#FCA5A5' },
-  errorBannerText: { color: '#991B1B', fontSize: 12, fontWeight: '600', flex: 1 }
+  synopsisParagraph: { fontSize: 13, color: colors.textSecondary, lineHeight: 22, textAlign: 'justify', fontWeight: '500' }
 });
